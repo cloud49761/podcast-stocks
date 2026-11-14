@@ -92,6 +92,11 @@
   .chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
   @media (prefers-color-scheme: dark){ .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)} }
   .chip .c{opacity:.6;font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;margin-left:5px}
+  .chip[hidden]{display:none !important}
+  .clear-filters{margin-left:auto;align-self:center;background:none;border:none;color:var(--accent);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:7px 10px;border-radius:999px;white-space:nowrap}
+  .clear-filters:hover{text-decoration:underline;text-underline-offset:3px}
+  .clear-filters:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .clear-filters[hidden]{display:none !important}
   .count-line{font-size:13px;color:var(--ink3);margin:16px 2px 0;font-variant-numeric:tabular-nums}
   .pagination{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:22px}
   .pagination:empty{display:none}
@@ -132,6 +137,7 @@
   .note{font-size:12.5px;line-height:1.6;color:var(--ink2);margin:12px 0 0}
   .pending{display:inline-block;font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:999px;padding:3px 9px}
   .empty{display:none;text-align:center;color:var(--ink2);padding:36px 16px;border:1px dashed var(--line2);border-radius:var(--radius);margin-top:14px;background:var(--surface)}
+  .empty[hidden]{display:none !important}
 
   /* ---------- records table (desktop) / cards (phone) ---------- */
   .cards-view{display:none}
@@ -282,17 +288,18 @@
     <div class="chips" id="chips" role="group" aria-label="Filter by list">
       <button class="chip" data-list="" aria-pressed="true">All</button>
       <button class="chip" data-list="Long" aria-pressed="false">Long<span class="c" id="cLong"></span></button>
-      <button class="chip" data-list="Short" aria-pressed="false">Short<span class="c">0</span></button>
+      <button class="chip" data-list="Short" aria-pressed="false">Short<span class="c" id="cShort">0</span></button>
       <button class="chip" data-list="Watchlist" aria-pressed="false">Watchlist<span class="c" id="cWatch"></span></button>
       <button class="chip" data-list="Pass" aria-pressed="false">Pass<span class="c" id="cPass"></span></button>
       <button class="chip" data-list="Closed" aria-pressed="false">Closed / exits<span class="c" id="cClosed"></span></button>
       <button class="chip" data-list="Review" aria-pressed="false" hidden style="display:none">Needs review<span class="c" id="cReview"></span></button>
       <button class="chip" data-list="NoDecision" aria-pressed="false">Discussed — no decision<span class="c" id="cNoDecision"></span></button>
+      <button type="button" class="clear-filters" id="clearFilters" hidden>Clear filters</button>
     </div>
   </div>
   <p class="count-line" id="countLine"></p>
   <div id="list"></div>
-  <div class="empty" id="empty">No cases match that search. Try a ticker (e.g. POOL), a speaker (Melvin), or clear the list filter.</div>
+  <div class="empty" id="empty" hidden>No cases match that search. Try a ticker (e.g. POOL), a speaker (Melvin), or clear the list filter.</div>
   <nav class="pagination" id="pagination" aria-label="Records pages"></nav>
 </section>
 
@@ -523,6 +530,83 @@ var listEl = document.getElementById('list');
 var emptyEl = document.getElementById('empty');
 var countEl = document.getElementById('countLine');
 var paginationEl = document.getElementById('pagination');
+var clearFiltersEl = document.getElementById('clearFilters');
+var hasCompletedFirstRender = false;
+
+function syncChipsUI(){
+  var all = document.querySelectorAll('.chip');
+  for(var i=0;i<all.length;i++){
+    var lv = all[i].getAttribute('data-list');
+    all[i].setAttribute('aria-pressed', lv==="" ? (state.list.length===0 ? 'true':'false') : (state.list.indexOf(lv)!==-1 ? 'true':'false'));
+  }
+}
+function hasActiveFilters(){ return !!(state.q || state.show || state.list.length); }
+function updateClearFilters(){
+  if(!clearFiltersEl) return;
+  var active = hasActiveFilters();
+  clearFiltersEl.hidden = !active;
+}
+function syncUrl(){
+  try{
+    var params = new URLSearchParams();
+    if(state.show) params.set('show', state.show);
+    if(state.list.length) params.set('status', state.list.join(','));
+    if(state.q) params.set('ticker', state.q);
+    var qs = params.toString();
+    var newUrl = qs ? ('?' + qs) : window.location.pathname;
+    if(window.location.search !== (qs ? ('?' + qs) : '')){
+      window.history.replaceState(null, '', newUrl);
+    }
+  }catch(e){ /* address-bar sync is best-effort in the sandboxed frame */ }
+}
+function applyUrlParams(){
+  var params;
+  try{ params = new URLSearchParams(window.location.search || ''); }catch(e){ return; }
+  if(!params) return;
+  /* ?show= — only apply a value that matches a real show option */
+  var showParam = params.get('show');
+  if(showParam){
+    var sel = document.getElementById('showSel');
+    var showOk = false;
+    if(sel){
+      for(var i=0;i<sel.options.length;i++){
+        if(sel.options[i].value === showParam){ showOk = true; break; }
+      }
+    }
+    if(showOk){ state.show = showParam; if(sel) sel.value = showParam; }
+  }
+  /* ?status= — category; supports a single value or a comma-separated list */
+  var statusValues = [];
+  var statusAll = params.getAll('status');
+  for(var s=0;s<statusAll.length;s++){
+    var parts = String(statusAll[s]).split(',');
+    for(var p=0;p<parts.length;p++){ var v = parts[p].trim(); if(v) statusValues.push(v); }
+  }
+  if(statusValues.length){
+    var aliases = {
+      'long':'Long','short':'Short','watchlist':'Watchlist','pass':'Pass',
+      'closed':'Closed','closed / exits':'Closed','closed / exit':'Closed',
+      'review':'Review','needs review':'Review',
+      'nodecision':'NoDecision','no decision':'NoDecision','discussed — no decision':'NoDecision','discussed - no decision':'NoDecision','discussed':'NoDecision',
+      'mastermind':'Mastermind'
+    };
+    var valid = [];
+    for(var k=0;k<statusValues.length;k++){
+      var raw = statusValues[k];
+      var mapped = aliases[raw] || aliases[raw.toLowerCase()] || null;
+      if(mapped && valid.indexOf(mapped)===-1) valid.push(mapped);
+    }
+    if(valid.length) state.list = valid;
+  }
+  /* ?ticker= — search text */
+  var tickerParam = params.get('ticker');
+  if(tickerParam && tickerParam.trim()){
+    state.q = tickerParam.trim();
+    var qEl = document.getElementById('q');
+    if(qEl) qEl.value = state.q;
+  }
+  syncChipsUI();
+}
 
 function stanceOf(p){ return p.list==="Mastermind" ? (p.stance==="Long"?"Long":"Review") : p.list; }
 function badgeClass(p){ var l=stanceOf(p); return l==="Long"?"b-long":l==="Watchlist"?"b-watch":l==="Pass"?"b-pass":l==="Closed"?"b-closed":l==="Review"?"b-review":l==="NoDecision"?"b-nodecision":"b-pass"; }
@@ -672,7 +756,6 @@ function render(){
   var endIdx = Math.min(startIdx + PAGE_SIZE, total);
   var pageRows = rows.slice(startIdx, endIdx);
   countEl.textContent = total ? ("Showing "+(startIdx+1)+"\u2013"+endIdx+" of "+total+" records") : "Showing 0 of 0 records";
-  emptyEl.style.display = total ? "none" : "block";
   renderPagination(total, totalPages);
   syncSortControls();
   var cardsHtml = pageRows.map(function(p){
@@ -702,17 +785,36 @@ function render(){
       + '</article>';
   }).join('');
   listEl.innerHTML = tableHtml(pageRows) + '<div class="cards-view">' + cardsHtml + '</div>';
+  /* Empty state is only revealed after the first render pass has populated
+     the list, so it can never flash before the records on initial load. */
+  hasCompletedFirstRender = true;
+  emptyEl.hidden = !!total;
+  emptyEl.style.display = total ? "none" : "block";
+  updateClearFilters();
+  syncUrl();
 }
 
 function setCounts(){
-  var c = {Long:0,Watchlist:0,Pass:0,Closed:0,Review:0,Mastermind:0,NoDecision:0};
+  var c = {Long:0,Short:0,Watchlist:0,Pass:0,Closed:0,Review:0,Mastermind:0,NoDecision:0};
   PICKS.forEach(function(p){ if(c[p.list]!==undefined) c[p.list]++; });
   document.getElementById('cLong').textContent = c.Long;
+  var cShortEl = document.getElementById('cShort'); if(cShortEl) cShortEl.textContent = c.Short;
   document.getElementById('cWatch').textContent = c.Watchlist;
   document.getElementById('cPass').textContent = c.Pass;
   document.getElementById('cClosed').textContent = c.Closed;
   document.getElementById('cReview').textContent = c.Review;
   document.getElementById('cNoDecision').textContent = c.NoDecision;
+  /* Hide any category pill whose count is 0 — dynamically, so the pill
+     reappears if rows are ever added to that category. The "Needs review"
+     pill stays hidden by its existing design and is not unhidden here. */
+  var chips = document.querySelectorAll('.chip');
+  for(var i=0;i<chips.length;i++){
+    var lv = chips[i].getAttribute('data-list');
+    if(!lv || lv==="Review") continue;
+    var isZero = !c[lv];
+    chips[i].hidden = isZero;
+    chips[i].style.display = isZero ? "none" : "";
+  }
 }
 
 document.getElementById('q').addEventListener('input', function(e){ state.q = e.target.value.trim(); state.page = 1; render(); });
@@ -748,14 +850,23 @@ document.getElementById('chips').addEventListener('click', function(e){
   var v = btn.getAttribute('data-list');
   if(v===""){ state.list = []; }
   else { var i = state.list.indexOf(v); if(i===-1) state.list.push(v); else state.list.splice(i,1); }
-  var all = document.querySelectorAll('.chip');
-  for(var i=0;i<all.length;i++){
-    var lv = all[i].getAttribute('data-list');
-    all[i].setAttribute('aria-pressed', lv==="" ? (state.list.length===0 ? 'true':'false') : (state.list.indexOf(lv)!==-1 ? 'true':'false'));
-  }
+  syncChipsUI();
   state.page = 1;
   render();
 });
+if(clearFiltersEl){
+  clearFiltersEl.addEventListener('click', function(){
+    state.q = "";
+    state.show = "";
+    state.list = [];
+    state.page = 1;
+    var qEl = document.getElementById('q'); if(qEl) qEl.value = "";
+    var showEl = document.getElementById('showSel'); if(showEl) showEl.value = "";
+    syncChipsUI();
+    render();
+  });
+}
+applyUrlParams();
 setCounts();
 render();
 </script>

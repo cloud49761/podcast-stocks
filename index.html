@@ -93,6 +93,16 @@
   @media (prefers-color-scheme: dark){ .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)} }
   .chip .c{opacity:.6;font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;margin-left:5px}
   .count-line{font-size:13px;color:var(--ink3);margin:16px 2px 0;font-variant-numeric:tabular-nums}
+  .pagination{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;margin-top:22px}
+  .pagination:empty{display:none}
+  .pg-btn{border:1px solid var(--line2);background:var(--surface);color:var(--ink2);border-radius:10px;padding:8px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;min-width:40px;transition:background .15s ease,color .15s ease,border-color .15s ease}
+  .pg-btn:hover:not(:disabled){border-color:var(--ink3);color:var(--ink)}
+  .pg-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .pg-btn[aria-current="page"]{background:var(--navy);border-color:var(--navy);color:#fff}
+  @media (prefers-color-scheme: dark){ .pg-btn[aria-current="page"]{background:var(--accent);border-color:var(--accent)} }
+  .pg-btn:disabled{opacity:.45;cursor:default}
+  .pg-ellipsis{color:var(--ink3);font-size:13px;padding:0 2px}
+  .pg-info{width:100%;text-align:center;font-size:13px;color:var(--ink3);margin-top:2px;font-variant-numeric:tabular-nums}
 
   /* ---------- pick cards ---------- */
   .pick{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-top:14px;box-shadow:var(--shadow);transition:box-shadow .18s ease,border-color .18s ease}
@@ -122,6 +132,46 @@
   .note{font-size:12.5px;line-height:1.6;color:var(--ink2);margin:12px 0 0}
   .pending{display:inline-block;font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:999px;padding:3px 9px}
   .empty{display:none;text-align:center;color:var(--ink2);padding:36px 16px;border:1px dashed var(--line2);border-radius:var(--radius);margin-top:14px;background:var(--surface)}
+
+  /* ---------- records table (desktop) / cards (phone) ---------- */
+  .cards-view{display:none}
+  .records-table-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-top:14px;overflow:hidden}
+  table.records{width:100%;border-collapse:collapse;font-size:13px}
+  table.records th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);padding:13px 12px 11px;border-bottom:2px solid var(--line);white-space:nowrap;background:var(--surface)}
+  table.records th:first-child,table.records td:first-child{padding-left:16px}
+  table.records th:last-child,table.records td:last-child{padding-right:16px}
+  table.records td{padding:13px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5}
+  table.records tbody tr:last-child td{border-bottom:none}
+  table.records tbody tr{transition:background .12s ease}
+  table.records tbody tr:hover td{background:var(--surface2)}
+  .th-sort{background:none;border:none;font:inherit;color:inherit;cursor:pointer;display:inline-flex;gap:6px;align-items:center;padding:2px 0;text-transform:inherit;letter-spacing:inherit}
+  .th-sort:hover{color:var(--ink)}
+  .th-sort:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .th-sort .sort-arrow{font-size:9px;color:var(--ink3);line-height:1}
+  .th-sort .sort-arrow.on{color:var(--accent)}
+  .t-company{font-weight:700;font-size:13.5px;letter-spacing:-.01em;color:var(--navy)}
+  .t-sub{color:var(--ink2);font-size:12px;margin-top:3px;line-height:1.5}
+  .t-date{font-weight:600;white-space:nowrap}
+  .t-ret{font-family:"IBM Plex Mono",monospace;font-size:15.5px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .t-price{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .t-note{color:var(--ink2);font-size:12.5px;line-height:1.55;min-width:170px}
+  .t-note .q{color:var(--ink);display:block;margin-bottom:4px}
+  .t-note .n{display:block;margin-top:4px}
+  .t-flags{margin-top:6px;display:flex;gap:5px;flex-wrap:wrap}
+
+  /* ---------- collapsible sections ---------- */
+  details.collapse > summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;border-radius:10px;padding:2px 0}
+  details.collapse > summary::-webkit-details-marker{display:none}
+  details.collapse > summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  details.collapse > summary h2{margin:0}
+  .toggle-pill{flex:none;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);background:var(--surface);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--ink2);box-shadow:var(--shadow)}
+  details.collapse > summary:hover .toggle-pill{border-color:var(--ink3);color:var(--ink)}
+  .toggle-pill .chev{font-size:10px;line-height:1;transition:transform .18s ease}
+  details.collapse[open ] > summary .chev{transform:rotate(180deg)}
+  .toggle-pill .t-collapse{display:none}
+  details.collapse[open ] .toggle-pill .t-collapse{display:inline}
+  details.collapse[open ] .toggle-pill .t-expand{display:none}
+  .collapse-body{margin-top:14px}
 
   /* ---------- speakers / shows panels & tables ---------- */
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -174,6 +224,9 @@
     .pick{padding:16px}
     .panel{padding:6px 14px 10px}
     #next .panel{padding:16px 18px}
+    .records-table-wrap{display:none}
+    .cards-view{display:block}
+    .cards-view .pick:first-child{margin-top:14px}
     .showrow{flex-direction:column;gap:10px;padding:16px 6px}
     .showrow .ct{text-align:left;max-width:none}
     table.mini{min-width:0;font-size:13px}
@@ -208,7 +261,7 @@
 
 <section id="picks">
   <h2>All cases</h2>
-  <p class="sub">Search by ticker, company, speaker or show. Every record with a ticker shows a return since the episode: for Longs, that is how the pick itself performed; for Watchlist, Pass, Discussed — no decision and holdings, it is simply what happened after the episode mentioned the stock — never counted as a pick's return. <strong>Mastermind</strong> is shown as its own section: panel episodes of The Investor's Podcast where each speaker pitches their best idea, plus guest-fund holdings. These are the speakers' own picks, not the show's portfolio decisions. Panel picks are counted separately from the portfolio picks; guest-fund holdings are not counted as picks. Inside that section, a row is <strong>Long</strong> where the speaker picked the stock or holds it. Rows labelled <strong>“Discussed — no decision”</strong> are different: the stock was discussed but no buy, sell or hold decision was made in that episode.</p>
+  <p class="sub">Search by ticker, company, speaker or show. Every record with a ticker shows a return since the episode: for Longs, that is how the pick itself performed; for Watchlist, Pass, Discussed — no decision and holdings, it is simply what happened after the episode mentioned the stock — never counted as a pick's return.</p>
   <div class="controls">
     <div class="searchrow">
       <input type="search" id="q" placeholder="Search ticker, company, speaker, episode…" aria-label="Search picks">
@@ -216,7 +269,7 @@
         <option value="">All shows</option>
         <option>Value After Hours</option>
         <option>The Investor's Podcast</option>
-        <option>Mastermind</option>
+        <option>The Investor's Podcast Mastermind</option>
         <option>The Acquirers Podcast</option>
         <option>Business Breakdowns</option>
         <option>Value Options</option>
@@ -241,48 +294,31 @@
   <p class="count-line" id="countLine"></p>
   <div id="list"></div>
   <div class="empty" id="empty">No cases match that search. Try a ticker (e.g. POOL), a speaker (Melvin), or clear the list filter.</div>
-</section>
-
-<section id="speakers">
-  <h2>Picks by speaker</h2>
-  <p class="sub">Speakers are listed alphabetically, with counts of buys decided on the episode only — no ranking, no winner.</p>
-  <div class="panel">
-    <table class="mini">
-      <tr><th>Speaker</th><th class="r">Buys decided on the episode</th><th class="r">With a return to 12 Nov 2026</th></tr>
-      <tr><td>Alexander Roepers (Value After Hours)</td><td class="r mono">1</td><td class="r mono">1</td></tr>
-      <tr><td>Charles Lemonides (Value After Hours)</td><td class="r mono">1</td><td class="r mono">1</td></tr>
-      <tr><td>Christopher Bloomstran (Value After Hours)</td><td class="r mono">3</td><td class="r mono">3</td></tr>
-      <tr><td>Daniel Mahncke (The Investor's Podcast)</td><td class="r mono">1</td><td class="r mono">1</td></tr>
-      <tr><td>Fraser Christie (Business Breakdowns)</td><td class="r mono">1</td><td class="r mono">1</td></tr>
-      <tr><td>Jonathan Boyar (Value After Hours)</td><td class="r mono">8</td><td class="r mono">8</td></tr>
-      <tr><td>Kyle Grieve &amp; Shawn O'Malley (The Investor's Podcast)</td><td class="r mono">1</td><td class="r mono">1</td></tr>
-      <tr><td>Ryan Albert — Golfzon (Value After Hours)</td><td class="r mono">1</td><td class="r mono">1</td></tr>
-      <tr><td>Stephen Farrington (Value After Hours)</td><td class="r mono">2</td><td class="r mono">2</td></tr>
-      <tr><td>Stig Brodersen · Tobias Carlisle · Hari Ramachandra (TIP857 · Mastermind)</td><td class="r mono">3</td><td class="r mono">3 — Mastermind panel picks (SPGI, NVO, DECK), counted separately from the portfolio picks.</td></tr>
-      <tr><td>Tim Melvin (Value After Hours)</td><td class="r mono">8</td><td class="r mono">8</td></tr>
-      <tr><td>Tim Travis (Value After Hours)</td><td class="r mono">1</td><td class="r mono">1 — low confidence</td></tr>
-      <tr><td>Tim Travis &amp; Tobias Carlisle (Value Options)</td><td class="r mono">2</td><td class="r mono">2</td></tr>
-      <tr><td>Todd Wenning (Value After Hours)</td><td class="r mono">3</td><td class="r mono">3</td></tr>
-    </table>
-  </div>
+  <nav class="pagination" id="pagination" aria-label="Records pages"></nav>
 </section>
 
 <section id="shows">
-  <h2>Coverage by show</h2>
+  <details class="collapse">
+  <summary><h2>Coverage by show</h2><span class="toggle-pill"><span class="t-expand">Expand</span><span class="t-collapse">Collapse</span><span class="chev" aria-hidden="true">&#9660;</span></span></summary>
+  <div class="collapse-body">
   <p class="sub">Shows covered, plus one paused source. Value After Hours episodes count once, under Value After Hours; Value Options episodes are counted separately.</p>
   <p class="sub">42+ episodes covered — Value After Hours and The Investor's Podcast, Nov 2024 to Nov 2026 · Focused Compounding is paused · 147 records tracked: the four lists (Long, Short, Watchlist, Pass), exits, the Mastermind section, 14 records discussed with no decision</p>
   <div class="panel">
     <div class="showrow"><div><div class="nm">The Investor's Podcast (formerly We Study Billionaires)</div><div class="dt">26 episodes, Nov 2024 to Nov 2026 · The Intrinsic Value Podcast merged into this feed in April 2026; its portfolio decisions are the ones tracked here. · Watchlist: CPRT, DPZ, WMT, HEI, RMS (Hermès), GE, SHOP; Pass: FIX, APP, META, TDG, MC (LVMH)</div></div><div class="ct">60 rows</div></div>
-    <div class="showrow"><div><div class="nm">Mastermind</div><div class="dt">Panel episodes of The Investor's Podcast where each speaker pitches their best idea, plus guest-fund holdings. These are the speakers' own picks, not the show's portfolio decisions. Panel picks are counted separately from the portfolio picks; guest-fund holdings are not counted as picks. 15 panel picks.</div></div><div class="ct">18 episodes · 43 rows</div></div>
+    <div class="showrow"><div><div class="nm">The Investor's Podcast Mastermind</div><div class="dt">Panel episodes of The Investor's Podcast where each speaker pitches their best idea, plus guest-fund holdings. These are the speakers' own picks, not the show's portfolio decisions. Panel picks are counted separately from the portfolio picks; guest-fund holdings are not counted as picks. 15 panel picks. Inside that section, a row is Long where the speaker picked the stock or holds it.</div></div><div class="ct">18 episodes · 43 rows</div></div>
     <div class="showrow"><div><div class="nm">Value After Hours</div><div class="dt">12 episodes, Nov 2024 to Nov 2026 · entry dates use the Tuesday YouTube livestream, 2 days before the podcast date</div></div></div>
     <div class="showrow"><div><div class="nm">The Acquirers Podcast / Value Options</div><div class="dt">Value Options episodes counted separately from Value After Hours</div></div><div class="ct">2 buys decided on the episode (MGM, VICI)</div></div>
     <div class="showrow"><div><div class="nm">Business Breakdowns</div><div class="dt">1 episode in window — EP.248 (27 Jul) → EP.249 Affirm (22 Oct)</div></div><div class="ct">1 buy decided on the episode (AFRM)</div></div>
     <div class="showrow"><div><div class="nm">Focused Compounding — paused</div><div class="dt">Paused: no new episodes since 29 May 2026 (EP.480).</div></div><div class="ct">Paused</div></div>
   </div>
+  </div>
+  </details>
 </section>
 
 <section id="method">
-  <h2>Methodology — how returns are worked out</h2>
+  <details class="collapse">
+  <summary><h2>Methodology — how returns are worked out</h2><span class="toggle-pill"><span class="t-expand">Expand</span><span class="t-collapse">Collapse</span><span class="chev" aria-hidden="true">&#9660;</span></span></summary>
+  <div class="collapse-body">
   <p class="sub">The rules below are fixed in advance and published with the data, so anyone can check a number — or see exactly why something was left out.</p>
   <div class="rules">
     <div class="rule"><h3>Explicit pitches only</h3><p>Only stocks a speaker explicitly pitches on the episode are tracked — a clear buy case, a stated position, or (for Business Breakdowns) a full deep-dive thesis. Passing mentions, sponsor reads, and stocks merely discussed with no decision made are never picks. Where a show gives its own verdict — a stock added to The Investor's Podcast's Intrinsic Value Portfolio, or not added — that verdict decides Long vs. Pass.</p></div>
@@ -294,10 +330,12 @@
     <div class="rule"><h3>Holds and exits</h3><p>Holds count as Long, flagged as Hold. A Hold’s return is measured from the first close after the episode, like any other record — it shows what happened after the episode mentioned the stock, not how the original position did, because that position was bought earlier. A sold exit closes the original Long — its performance to the exit date counts — and is never recorded as a new Short.</p></div>
     <div class="rule"><h3>Watchlist and Pass</h3><p>Watchlist = liked but not bought, usually on valuation. Pass = looked and decided not to buy. Both show a return since the episode — what happened after the stock was mentioned — never counted as a pick’s return, because no position was taken.</p></div>
     <div class="rule"><h3>Preferreds and ETFs</h3><p>Tracked, but separately from common-stock picks, and on total return including dividends/distributions — price-only returns would misstate them.</p></div>
-    <div class="rule"><h3>Mastermind</h3><p>Mastermind is its own section: panel episodes of The Investor's Podcast where each speaker pitches their best idea, plus guest-fund holdings. These are the speakers' own picks, not the show's portfolio decisions. Panel picks are <strong>counted separately from the portfolio decisions</strong>, from the first trading close after the episode. Guest-fund holdings show a return since the episode, because no buy date is known — it is what happened after the episode mentioned them, not a pick’s return. Picks with a condition — a price to wait for, or a buy that happened before the episode — are shown the same way: a return since the episode, never counted as a pick’s return. Within the section, a row is Long where the speaker picked the stock or holds it.</p></div>
+    <div class="rule"><h3>The Investor's Podcast Mastermind</h3><p>The Investor's Podcast Mastermind is its own section: panel episodes of The Investor's Podcast where each speaker pitches their best idea, plus guest-fund holdings. These are the speakers' own picks, not the show's portfolio decisions. Panel picks are <strong>counted separately from the portfolio decisions</strong>, from the first trading close after the episode. Guest-fund holdings show a return since the episode, because no buy date is known — it is what happened after the episode mentioned them, not a pick’s return. Picks with a condition — a price to wait for, or a buy that happened before the episode — are shown the same way: a return since the episode, never counted as a pick’s return. Within the section, a row is Long where the speaker picked the stock or holds it.</p></div>
     <div class="rule"><h3>Mentions are not picks</h3><p>A ticker that is only mentioned — an anecdote, a board seat, a product the speaker issues, or a name that appears only in an episode title — is not a pick. A stock discussed at length with no buy decision is listed as 'Discussed — no decision', not as a Long.</p></div>
     <div class="rule"><h3>Exclusions</h3><p>PINE is excluded — it is an asset owned by CTO, not a Melvin pick. Passing mentions and sponsor reads are never picks.</p></div>
   </div>
+  </div>
+  </details>
 </section>
 
 <section id="next">
@@ -423,43 +461,43 @@ var PICKS = [
  {ticker:"KNSL",company:"Kinsale Capital",show:"The Investor's Podcast",speaker:"Clay Finck / Daniel Mahncke",episode:"TIP804 — Kinsale Capital (deep dive)",epDate:"3 Apr 2026",entryDate:"6 Apr 2026",entry:345.79,last:389.84,ret:12.74,spy:14.9,excess:-2.16,list:"NoDecision",ev:"",flag:"",quote:"Deep dive wrapping with no add, pass or portfolio decision.",url:"https://www.theinvestorspodcast.com/episodes/kinsale-capital-stock-deep-dive-w-clay-finck-daniel-mahncke/",note:"A community member pitched it in a competition weeks earlier; the hosts themselves made no decision."},
  {ticker:"CATL",company:"CATL (ticker not assigned)",show:"The Investor's Podcast",speaker:"Manish Karira (bull) / Ralph Summerford (bear), hosted by Stig Brodersen",episode:"TIP840 — CATL: Powering EVs, Power Grids, and AI (Inner Circle bull/bear debate)",epDate:"23 Aug 2026",entryDate:"—",entry:null,last:null,ret:null,spy:null,excess:null,list:"NoDecision",ev:"",flag:"",quote:"A deliberate bull/bear debate format, with no portfolio add/pass decision.",url:"https://www.theinvestorspodcast.com/episodes/inner-circle-q3-2026-catl/",note:"A bull/bear debate with no verdict and no owner — dual-listed: 300750 in China, 3750 in Hong Kong, per the episode."},
  /* ---- Mastermind — its own section: panel picks listed separately from the portfolio picks; guest-fund holdings listed as holdings ---- */
- {ticker:"RELY",company:"Remitly",show:"Mastermind",speaker:"Deiya Pernas (Pernas Research)",episode:"TIP750 — Remitly (guest fund: Deiya Pernas, Pernas Research)",epDate:"4 Sep 2025",entryDate:"5 Sep 2025",entry:19.49,last:22.79,ret:16.93,spy:16.98,excess:-0.05,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"It's currently our biggest position in the portfolio… if there's any name in our portfolio that we think has the opportunity to really deliver a multibagger … it's Remitly.",url:"https://www.theinvestorspodcast.com/episodes/generating-alpha-digital-payments-ai-w-deiya-pernas/",note:"A guest-fund holding (Deiya Pernas's Pernas Research) — not a portfolio decision. Separate from the Remitly Pass in the other episode."},
- {ticker:"HOOD",company:"Robinhood",show:"Mastermind",speaker:"Derek Pilecki (Gator Capital)",episode:"TIP758 — Robinhood & WEX (guest fund: Derek Pilecki, Gator Capital)",epDate:"2 Oct 2025",entryDate:"3 Oct 2025",entry:148.67,last:81.35,ret:-45.28,spy:13.14,excess:-58.42,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund — historical Long, largely exited",quote:"Almost completely outta position… valuation is challenging… 50x earnings. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/current-market-conditions-investment-opportunities-w-derek-pilecki/",note:"Derek Pilecki's Gator Capital fund bought Robinhood in Nov 2023 near tangible book value and is now almost completely out — a historical guest Long, largely exited, not a current portfolio decision."},
- {ticker:"WEX",company:"WEX Inc.",show:"Mastermind",speaker:"Derek Pilecki (Gator Capital)",episode:"TIP758 — Robinhood & WEX (guest fund: Derek Pilecki, Gator Capital)",epDate:"2 Oct 2025",entryDate:"3 Oct 2025",entry:159.65,last:179.49,ret:12.43,spy:13.14,excess:-0.71,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund thesis",quote:"Valuation's too low. Like a year ago, the stock was at $240. Like we could easily get back there.",url:"https://www.theinvestorspodcast.com/episodes/current-market-conditions-investment-opportunities-w-derek-pilecki/",note:"Derek Pilecki's (Gator Capital) letter idea — a guest-fund thesis, not a portfolio decision."},
- {ticker:"SNY",company:"Sanofi",show:"Mastermind",speaker:"Hari Ramachandra",episode:"TIP767 — Mastermind Q4 2025: Sanofi, Remitly and Crocs",epDate:"9 Nov 2025",entryDate:"10 Nov 2025",entry:50.66,last:48.46,ret:-4.34,spy:11.11,excess:-15.45,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"I'm pitching it as a safe place to park with reasonable growth.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-discussion-q4-2025-sanofi-remitly-crocs/",note:"A bullish pitch (about 5% dividend plus 3–4% growth), with no portfolio add. A Mastermind segment, not a portfolio decision."},
- {ticker:"FND",company:"Floor & Decor",show:"Mastermind",speaker:"Andrew Brenton (Turtle Creek Asset Management)",episode:"TIP770 — Mastering the Markets (guest fund)",epDate:"21 Nov 2025",entryDate:"24 Nov 2025",entry:60.67,last:48.83,ret:-19.52,spy:13.22,excess:-32.73,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Intrinsic value well above 120, versus a price a little below 60; added at around 60 a few years ago. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/mastering-the-markets-w-andrew-brenton/",note:"A Turtle Creek guest-fund holding — not a portfolio decision."},
- {ticker:"KNSL",company:"Kinsale Capital",show:"Mastermind",speaker:"Andrew Brenton (Turtle Creek Asset Management)",episode:"TIP770 — Mastering the Markets (guest fund)",epDate:"21 Nov 2025",entryDate:"24 Nov 2025",entry:379.15,last:389.84,ret:2.82,spy:13.22,excess:-10.4,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"We've only owned Kinsale for two years… we bought more after a 20% fall. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/mastering-the-markets-w-andrew-brenton/",note:"A Turtle Creek guest-fund holding — not a portfolio decision."},
- {ticker:"BRK.B",company:"Berkshire Hathaway",show:"Mastermind",speaker:"Stig Brodersen",episode:"TIP795 — Mastermind Q1 2026: Berkshire, Moody's, BellRing",epDate:"1 Mar 2026",entryDate:"2 Mar 2026",entry:480.17,last:589.83,ret:22.84,spy:10.31,excess:12.53,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind personal Long",quote:"I am long Berkshire Hathaway myself… and I added this recently, as of January 22nd.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q1-2026-berkshire-moodys-bellring-brands/",note:"The speaker's own personal position, not a portfolio add."},
- {ticker:"BRBR",company:"BellRing Brands",show:"Mastermind",speaker:"Tobias Carlisle",episode:"TIP795 — Mastermind Q1 2026: Berkshire, Moody's, BellRing",epDate:"1 Mar 2026",entryDate:"2 Mar 2026",entry:18.15,last:10.24,ret:-43.58,spy:10.31,excess:-53.89,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"My pick is Bell Ring Brands. The ticket is BRBR.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q1-2026-berkshire-moodys-bellring-brands/",note:"Tobias's Mastermind pick — bought in December at $25, down about 30%, the worst performer in his portfolio. Not a portfolio decision."},
- {ticker:"MCO",company:"Moody's",show:"Mastermind",speaker:"Hari Ramachandra",episode:"TIP795 — Mastermind Q1 2026: Berkshire, Moody's, BellRing",epDate:"1 Mar 2026",entryDate:"2 Mar 2026",entry:466.10,last:506.56,ret:8.68,spy:10.31,excess:-1.63,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"my pick is Moody's",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q1-2026-berkshire-moodys-bellring-brands/",note:"Hari's Mastermind pick — no ownership stated; he would put it in his tax-deferred fund and is comfortable holding it five years. Not a portfolio decision."},
- {ticker:"LIN",company:"Linde",show:"Mastermind",speaker:"Clay Finck",episode:"TIP796 — Die with Zero and Linde",epDate:"6 Mar 2026",entryDate:"9 Mar 2026",entry:483.62,last:522.49,ret:8.04,spy:11.63,excess:-3.59,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"The clear answer was Linde PLC.",url:"https://www.theinvestorspodcast.com/episodes/die-with-zero-linde-stock-analysis-w-clay-finck/",note:"A Mastermind member's pick, relayed by Clay — not Clay's own position."},
- {ticker:"META",company:"Meta Platforms",show:"Mastermind",speaker:"Hari Ramachandra",episode:"TIP825 — Mastermind: Meta, Adobe, Booking",epDate:"21 Jun 2026",entryDate:"22 Jun 2026",entry:563.85,last:623.61,ret:10.60,spy:1.71,excess:8.89,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"I see a 46% upside from here… an absolute world-class business. (Mastermind segment)",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2026-adobe-meta-booking-holdings/",note:"Bullish material with no portfolio buy/pass decision. Not the Meta Pass in the other episode."},
- {ticker:"BKNG",company:"Booking Holdings",show:"Mastermind",speaker:"Tobias Carlisle",episode:"TIP825 — Mastermind: Meta, Adobe, Booking",epDate:"21 Jun 2026",entryDate:"22 Jun 2026",entry:167.77,last:161.20,ret:-3.92,spy:1.71,excess:-5.63,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"A reasonable risk-adjusted bet at these levels. (Mastermind segment, within a bull/bear debate)",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2026-adobe-meta-booking-holdings/",note:"Pitch language inside a debate — not a portfolio Long."},
- {ticker:"ADBE",company:"Adobe",show:"Mastermind",speaker:"Stig Brodersen",episode:"TIP825 — Mastermind: Meta, Adobe, Booking",epDate:"21 Jun 2026",entryDate:"22 Jun 2026",entry:194.9,last:238.54,ret:22.39,spy:1.71,excess:20.68,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"My pick is Adobe.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2026-adobe-meta-booking-holdings/",note:"Stig Brodersen's pick — he already owns it. The right time to buy would be around $200, against $270 at recording, so it is shown as a Long."},
- {ticker:"SPGI",company:"S&P Global",show:"Mastermind",speaker:"Stig Brodersen",episode:"TIP857 — Mastermind Q4 2026: S&P Global, Novo, Deckers",epDate:"1 Nov 2026",entryDate:"2 Nov 2026",entry:475.17,last:468.51,ret:-1.40,spy:0.67,excess:-2.07,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"I took a one percent position just two hours before we recorded at 399 dollars a share. And this is my first new position in more than a year.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2026-sp-global-novo-deckers-brands/",note:"The speaker's own position, not a portfolio decision. Shown as Long within the Mastermind section only."},
- {ticker:"NVO",company:"Novo Nordisk",show:"Mastermind",speaker:"Hari Ramachandra",episode:"TIP857 — Mastermind Q4 2026: S&P Global, Novo, Deckers",epDate:"1 Nov 2026",entryDate:"2 Nov 2026",entry:40.45,last:40.65,ret:0.49,spy:0.67,excess:-0.17,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"Bullish on Novo Nordisk, trading at 12× forward earnings with a 4.5% dividend and an oral obesity pill gaining traction. (Show-notes summary of the pitch)",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2026-sp-global-novo-deckers-brands/",note:"The speaker's own pitch, not a portfolio decision."},
- {ticker:"DECK",company:"Deckers Brands",show:"Mastermind",speaker:"Tobias Carlisle",episode:"TIP857 — Mastermind Q4 2026: S&P Global, Novo, Deckers",epDate:"1 Nov 2026",entryDate:"2 Nov 2026",entry:85.00,last:84.53,ret:-0.55,spy:0.67,excess:-1.22,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"Bullish on Deckers, emphasising $1.6 billion in net cash, buybacks of 80% of free cash flow, and thoughtful capital allocation. (Show-notes summary of the pitch)",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2026-sp-global-novo-deckers-brands/",note:"The speaker's own pitch, not a portfolio decision."},
+ {ticker:"RELY",company:"Remitly",show:"The Investor's Podcast Mastermind",speaker:"Deiya Pernas (Pernas Research)",episode:"TIP750 — Remitly (guest fund: Deiya Pernas, Pernas Research)",epDate:"4 Sep 2025",entryDate:"5 Sep 2025",entry:19.49,last:22.79,ret:16.93,spy:16.98,excess:-0.05,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"It's currently our biggest position in the portfolio… if there's any name in our portfolio that we think has the opportunity to really deliver a multibagger … it's Remitly.",url:"https://www.theinvestorspodcast.com/episodes/generating-alpha-digital-payments-ai-w-deiya-pernas/",note:"A guest-fund holding (Deiya Pernas's Pernas Research) — not a portfolio decision. Separate from the Remitly Pass in the other episode."},
+ {ticker:"HOOD",company:"Robinhood",show:"The Investor's Podcast Mastermind",speaker:"Derek Pilecki (Gator Capital)",episode:"TIP758 — Robinhood & WEX (guest fund: Derek Pilecki, Gator Capital)",epDate:"2 Oct 2025",entryDate:"3 Oct 2025",entry:148.67,last:81.35,ret:-45.28,spy:13.14,excess:-58.42,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund — historical Long, largely exited",quote:"Almost completely outta position… valuation is challenging… 50x earnings. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/current-market-conditions-investment-opportunities-w-derek-pilecki/",note:"Derek Pilecki's Gator Capital fund bought Robinhood in Nov 2023 near tangible book value and is now almost completely out — a historical guest Long, largely exited, not a current portfolio decision."},
+ {ticker:"WEX",company:"WEX Inc.",show:"The Investor's Podcast Mastermind",speaker:"Derek Pilecki (Gator Capital)",episode:"TIP758 — Robinhood & WEX (guest fund: Derek Pilecki, Gator Capital)",epDate:"2 Oct 2025",entryDate:"3 Oct 2025",entry:159.65,last:179.49,ret:12.43,spy:13.14,excess:-0.71,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund thesis",quote:"Valuation's too low. Like a year ago, the stock was at $240. Like we could easily get back there.",url:"https://www.theinvestorspodcast.com/episodes/current-market-conditions-investment-opportunities-w-derek-pilecki/",note:"Derek Pilecki's (Gator Capital) letter idea — a guest-fund thesis, not a portfolio decision."},
+ {ticker:"SNY",company:"Sanofi",show:"The Investor's Podcast Mastermind",speaker:"Hari Ramachandra",episode:"TIP767 — Mastermind Q4 2025: Sanofi, Remitly and Crocs",epDate:"9 Nov 2025",entryDate:"10 Nov 2025",entry:50.66,last:48.46,ret:-4.34,spy:11.11,excess:-15.45,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"I'm pitching it as a safe place to park with reasonable growth.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-discussion-q4-2025-sanofi-remitly-crocs/",note:"A bullish pitch (about 5% dividend plus 3–4% growth), with no portfolio add. A Mastermind segment, not a portfolio decision."},
+ {ticker:"FND",company:"Floor & Decor",show:"The Investor's Podcast Mastermind",speaker:"Andrew Brenton (Turtle Creek Asset Management)",episode:"TIP770 — Mastering the Markets (guest fund)",epDate:"21 Nov 2025",entryDate:"24 Nov 2025",entry:60.67,last:48.83,ret:-19.52,spy:13.22,excess:-32.73,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Intrinsic value well above 120, versus a price a little below 60; added at around 60 a few years ago. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/mastering-the-markets-w-andrew-brenton/",note:"A Turtle Creek guest-fund holding — not a portfolio decision."},
+ {ticker:"KNSL",company:"Kinsale Capital",show:"The Investor's Podcast Mastermind",speaker:"Andrew Brenton (Turtle Creek Asset Management)",episode:"TIP770 — Mastering the Markets (guest fund)",epDate:"21 Nov 2025",entryDate:"24 Nov 2025",entry:379.15,last:389.84,ret:2.82,spy:13.22,excess:-10.4,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"We've only owned Kinsale for two years… we bought more after a 20% fall. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/mastering-the-markets-w-andrew-brenton/",note:"A Turtle Creek guest-fund holding — not a portfolio decision."},
+ {ticker:"BRK.B",company:"Berkshire Hathaway",show:"The Investor's Podcast Mastermind",speaker:"Stig Brodersen",episode:"TIP795 — Mastermind Q1 2026: Berkshire, Moody's, BellRing",epDate:"1 Mar 2026",entryDate:"2 Mar 2026",entry:480.17,last:589.83,ret:22.84,spy:10.31,excess:12.53,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind personal Long",quote:"I am long Berkshire Hathaway myself… and I added this recently, as of January 22nd.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q1-2026-berkshire-moodys-bellring-brands/",note:"The speaker's own personal position, not a portfolio add."},
+ {ticker:"BRBR",company:"BellRing Brands",show:"The Investor's Podcast Mastermind",speaker:"Tobias Carlisle",episode:"TIP795 — Mastermind Q1 2026: Berkshire, Moody's, BellRing",epDate:"1 Mar 2026",entryDate:"2 Mar 2026",entry:18.15,last:10.24,ret:-43.58,spy:10.31,excess:-53.89,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"My pick is Bell Ring Brands. The ticket is BRBR.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q1-2026-berkshire-moodys-bellring-brands/",note:"Tobias's Mastermind pick — bought in December at $25, down about 30%, the worst performer in his portfolio. Not a portfolio decision."},
+ {ticker:"MCO",company:"Moody's",show:"The Investor's Podcast Mastermind",speaker:"Hari Ramachandra",episode:"TIP795 — Mastermind Q1 2026: Berkshire, Moody's, BellRing",epDate:"1 Mar 2026",entryDate:"2 Mar 2026",entry:466.10,last:506.56,ret:8.68,spy:10.31,excess:-1.63,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"my pick is Moody's",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q1-2026-berkshire-moodys-bellring-brands/",note:"Hari's Mastermind pick — no ownership stated; he would put it in his tax-deferred fund and is comfortable holding it five years. Not a portfolio decision."},
+ {ticker:"LIN",company:"Linde",show:"The Investor's Podcast Mastermind",speaker:"Clay Finck",episode:"TIP796 — Die with Zero and Linde",epDate:"6 Mar 2026",entryDate:"9 Mar 2026",entry:483.62,last:522.49,ret:8.04,spy:11.63,excess:-3.59,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"The clear answer was Linde PLC.",url:"https://www.theinvestorspodcast.com/episodes/die-with-zero-linde-stock-analysis-w-clay-finck/",note:"A Mastermind member's pick, relayed by Clay — not Clay's own position."},
+ {ticker:"META",company:"Meta Platforms",show:"The Investor's Podcast Mastermind",speaker:"Hari Ramachandra",episode:"TIP825 — Mastermind: Meta, Adobe, Booking",epDate:"21 Jun 2026",entryDate:"22 Jun 2026",entry:563.85,last:623.61,ret:10.60,spy:1.71,excess:8.89,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"I see a 46% upside from here… an absolute world-class business. (Mastermind segment)",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2026-adobe-meta-booking-holdings/",note:"Bullish material with no portfolio buy/pass decision. Not the Meta Pass in the other episode."},
+ {ticker:"BKNG",company:"Booking Holdings",show:"The Investor's Podcast Mastermind",speaker:"Tobias Carlisle",episode:"TIP825 — Mastermind: Meta, Adobe, Booking",epDate:"21 Jun 2026",entryDate:"22 Jun 2026",entry:167.77,last:161.20,ret:-3.92,spy:1.71,excess:-5.63,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"A reasonable risk-adjusted bet at these levels. (Mastermind segment, within a bull/bear debate)",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2026-adobe-meta-booking-holdings/",note:"Pitch language inside a debate — not a portfolio Long."},
+ {ticker:"ADBE",company:"Adobe",show:"The Investor's Podcast Mastermind",speaker:"Stig Brodersen",episode:"TIP825 — Mastermind: Meta, Adobe, Booking",epDate:"21 Jun 2026",entryDate:"22 Jun 2026",entry:194.9,last:238.54,ret:22.39,spy:1.71,excess:20.68,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"My pick is Adobe.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2026-adobe-meta-booking-holdings/",note:"Stig Brodersen's pick — he already owns it. The right time to buy would be around $200, against $270 at recording, so it is shown as a Long."},
+ {ticker:"SPGI",company:"S&P Global",show:"The Investor's Podcast Mastermind",speaker:"Stig Brodersen",episode:"TIP857 — Mastermind Q4 2026: S&P Global, Novo, Deckers",epDate:"1 Nov 2026",entryDate:"2 Nov 2026",entry:475.17,last:468.51,ret:-1.40,spy:0.67,excess:-2.07,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"I took a one percent position just two hours before we recorded at 399 dollars a share. And this is my first new position in more than a year.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2026-sp-global-novo-deckers-brands/",note:"The speaker's own position, not a portfolio decision. Shown as Long within the Mastermind section only."},
+ {ticker:"NVO",company:"Novo Nordisk",show:"The Investor's Podcast Mastermind",speaker:"Hari Ramachandra",episode:"TIP857 — Mastermind Q4 2026: S&P Global, Novo, Deckers",epDate:"1 Nov 2026",entryDate:"2 Nov 2026",entry:40.45,last:40.65,ret:0.49,spy:0.67,excess:-0.17,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"Bullish on Novo Nordisk, trading at 12× forward earnings with a 4.5% dividend and an oral obesity pill gaining traction. (Show-notes summary of the pitch)",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2026-sp-global-novo-deckers-brands/",note:"The speaker's own pitch, not a portfolio decision."},
+ {ticker:"DECK",company:"Deckers Brands",show:"The Investor's Podcast Mastermind",speaker:"Tobias Carlisle",episode:"TIP857 — Mastermind Q4 2026: S&P Global, Novo, Deckers",epDate:"1 Nov 2026",entryDate:"2 Nov 2026",entry:85.00,last:84.53,ret:-0.55,spy:0.67,excess:-1.22,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"Bullish on Deckers, emphasising $1.6 billion in net cash, buybacks of 80% of free cash flow, and thoughtful capital allocation. (Show-notes summary of the pitch)",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2026-sp-global-novo-deckers-brands/",note:"The speaker's own pitch, not a portfolio decision."},
  /* ---- S08 E11 / E14 / E16 (acquirersmultiple.com) ---- */
  {ticker:"DECK",company:"Deckers Brands",show:"Value After Hours",speaker:"Christopher Bloomstran",episode:"S08 E14 — Christopher Bloomstran on Buffett, Berkshire",epDate:"14 Apr 2026",entryDate:"15 Apr 2026",entry:108.87,last:84.53,ret:-22.36,spy:8.17,excess:-30.52,list:"Long",ev:"Explicit",flag:"New add",quote:"Bloomstran bought Deckers — basis not much over $80 — and still called it cheap.",url:"https://acquirersmultiple.com/2026/04/value-after-hours-s08-e14-christopher-bloomstran-on-warren-buffett-berkshire-hathaway-brk-b-bldr-deck-alk/",url2:"https://youtu.be/YG9bTg3NBhA",note:"Bloomstran bought DECK (basis not much over $80) and still called it cheap."},
  {ticker:"BLDR",company:"Builders FirstSource",show:"Value After Hours",speaker:"Christopher Bloomstran",episode:"S08 E14 \u2014 Christopher Bloomstran on Buffett, Berkshire",epDate:"14 Apr 2026",entryDate:"15 Apr 2026",entry:85.13,last:60.12,ret:-29.38,spy:8.17,excess:-37.54,list:"Long",ev:"Thesis",flag:"New add",quote:"Bloomstran discussed this position as 'builder supply' in the episode.",url:"https://acquirersmultiple.com/2026/04/value-after-hours-s08-e14-christopher-bloomstran-on-warren-buffett-berkshire-hathaway-brk-b-bldr-deck-alk/",url2:"https://youtu.be/YG9bTg3NBhA",note:"Bloomstran said the wrong name — 'builder supply' — for this position; it is Builders FirstSource (BLDR), also tagged BLDR in the episode title."},
  {ticker:"BRK.B",company:"Berkshire Hathaway",show:"Value After Hours",speaker:"Christopher Bloomstran",episode:"S08 E14 — Christopher Bloomstran on Buffett, Berkshire",epDate:"14 Apr 2026",entryDate:"15 Apr 2026",entry:474.09,last:589.83,ret:24.41,spy:8.17,excess:16.24,list:"NoDecision",ev:"",flag:"",quote:"Berkshire discussed as Buffett's company, with no explicit personal buy/own decision by Bloomstran in this episode.",url:"https://acquirersmultiple.com/2026/04/value-after-hours-s08-e14-christopher-bloomstran-on-warren-buffett-berkshire-hathaway-brk-b-bldr-deck-alk/",url2:"https://youtu.be/YG9bTg3NBhA",note:"No explicit personal buy/own decision in this episode, so it is not counted as a Long."},
  {ticker:"BRK.B",company:"Berkshire Hathaway",show:"Value After Hours",speaker:"Adam Mead",episode:"S08 E16 — Adam Mead on Berkshire Hathaway",epDate:"5 May 2026",entryDate:"6 May 2026",entry:469.83,last:589.83,ret:25.54,spy:3.17,excess:22.37,list:"NoDecision",ev:"Thesis",flag:"",quote:"Berkshire's value is around 475 to 510 a share.",url:"https://acquirersmultiple.com/2026/05/value-after-hours-s08-e16-author-and-investor-adam-mead-on-berkshire-hathaway-brk-a-brk-b-warren-buffett-abel/",url2:"https://youtu.be/PmxIWukOxS0",note:"Berkshire's valuation (475–510) and buybacks are discussed, but Mead makes no explicit personal buy/own decision, so it is not counted as a Long."},
  /* ---- TIP batch 4 (TIP674 / TIP675 / TIP680, Nov–Dec 2024) ---- */
- {ticker:"KNSL",company:"Kinsale Capital",show:"Mastermind",speaker:"Andrew Brenton (Turtle Creek Asset Management)",episode:"TIP674 — Kinsale Capital (guest fund: Andrew Brenton, Turtle Creek Asset Management)",epDate:"7 Nov 2024",entryDate:"8 Nov 2024",entry:456.36,last:389.84,ret:-14.58,spy:26.57,excess:-41.15,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Since we've owned it at the first of this year… If anything we're taking our view probably up a little bit.",url:"https://www.theinvestorspodcast.com/episodes/outperforming-the-market-managing-risk-market-inefficiencies-andrew-brenton/",note:"A Turtle Creek holding (Andrew Brenton), owned since the start of 2024, with the view taken up a little — not a portfolio decision."},
+ {ticker:"KNSL",company:"Kinsale Capital",show:"The Investor's Podcast Mastermind",speaker:"Andrew Brenton (Turtle Creek Asset Management)",episode:"TIP674 — Kinsale Capital (guest fund: Andrew Brenton, Turtle Creek Asset Management)",epDate:"7 Nov 2024",entryDate:"8 Nov 2024",entry:456.36,last:389.84,ret:-14.58,spy:26.57,excess:-41.15,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Since we've owned it at the first of this year… If anything we're taking our view probably up a little bit.",url:"https://www.theinvestorspodcast.com/episodes/outperforming-the-market-managing-risk-market-inefficiencies-andrew-brenton/",note:"A Turtle Creek holding (Andrew Brenton), owned since the start of 2024, with the view taken up a little — not a portfolio decision."},
  {ticker:"MA",company:"Mastercard",show:"The Investor's Podcast",speaker:"Clay Finck & Kyle Grieve",episode:"TIP675 — Best Quality Stock Idea Q4 2024 (Mastercard)",epDate:"14 Nov 2024",entryDate:"15 Nov 2024",entry:521.89,last:652.6,ret:25.05,spy:29.26,excess:-4.21,list:"NoDecision",ev:"",flag:"",quote:"No buy, watchlist or pass decision for Mastercard in the episode.",url:"https://www.theinvestorspodcast.com/episodes/best-quality-stock-idea-q4-2024/",note:"No buy, watchlist or pass decision for Mastercard in the episode."},
  {ticker:"EVO",company:"Evolution AB",show:"The Investor's Podcast",speaker:"Clay Finck & Kyle Grieve",episode:"TIP675 — Best Quality Stock Idea Q4 2024 (Evolution AB exit)",epDate:"14 Nov 2024",entryDate:"—",entry:null,last:null,ret:null,spy:null,excess:null,list:"Closed",ev:"Explicit",flag:"Exit of a Long",quote:"Sold out of Evolution AB at 967 SEK, a ~11% realised loss (Clay Finck; Kyle Grieve also completely sold out).",url:"https://www.theinvestorspodcast.com/episodes/best-quality-stock-idea-q4-2024/",note:"Both hosts sold out entirely before the 29 Oct 2024 recording — Clay at 967 SEK, about an 11% realised loss. It closes the earlier Long, not a new Short. No entry price is shown — the original buy was before this tracker's coverage starts."},
- {ticker:"FICO",company:"Fair Isaac",show:"Mastermind",speaker:"Dev Kantesaria (Valley Forge Capital Management)",episode:"TIP680 — Fair Isaac (guest fund: Dev Kantesaria, Valley Forge Capital Management)",epDate:"5 Dec 2024",entryDate:"6 Dec 2024",entry:2371.83,last:717.38,ret:-69.75,spy:24.57,excess:-94.32,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"A top holding of Valley Forge Capital Management per 13F. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/investing-in-exceptional-businesses-for-the-long-run-dev-kantesaria/",note:"A Valley Forge holding (Dev Kantesaria) and a top holding per its 13F — not a portfolio decision."},
- {ticker:"SPGI",company:"S&P Global",show:"Mastermind",speaker:"Dev Kantesaria (Valley Forge Capital Management)",episode:"TIP680 — S&P Global (guest fund: Dev Kantesaria, Valley Forge Capital Management)",epDate:"5 Dec 2024",entryDate:"6 Dec 2024",entry:516.77,last:468.51,ret:-9.34,spy:24.57,excess:-33.9,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Owned since the fund's inception in 2007. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/investing-in-exceptional-businesses-for-the-long-run-dev-kantesaria/",note:"A Valley Forge holding (Dev Kantesaria), owned since the fund's inception in 2007 — not a portfolio decision."},
+ {ticker:"FICO",company:"Fair Isaac",show:"The Investor's Podcast Mastermind",speaker:"Dev Kantesaria (Valley Forge Capital Management)",episode:"TIP680 — Fair Isaac (guest fund: Dev Kantesaria, Valley Forge Capital Management)",epDate:"5 Dec 2024",entryDate:"6 Dec 2024",entry:2371.83,last:717.38,ret:-69.75,spy:24.57,excess:-94.32,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"A top holding of Valley Forge Capital Management per 13F. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/investing-in-exceptional-businesses-for-the-long-run-dev-kantesaria/",note:"A Valley Forge holding (Dev Kantesaria) and a top holding per its 13F — not a portfolio decision."},
+ {ticker:"SPGI",company:"S&P Global",show:"The Investor's Podcast Mastermind",speaker:"Dev Kantesaria (Valley Forge Capital Management)",episode:"TIP680 — S&P Global (guest fund: Dev Kantesaria, Valley Forge Capital Management)",epDate:"5 Dec 2024",entryDate:"6 Dec 2024",entry:516.77,last:468.51,ret:-9.34,spy:24.57,excess:-33.9,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Owned since the fund's inception in 2007. (Guest-fund language throughout)",url:"https://www.theinvestorspodcast.com/episodes/investing-in-exceptional-businesses-for-the-long-run-dev-kantesaria/",note:"A Valley Forge holding (Dev Kantesaria), owned since the fund's inception in 2007 — not a portfolio decision."},
  /* ---- TIP batch 5 (TIP681 / TIP686 / TIP690, Dec 2024–Jan 2025) ---- */
- {ticker:"EVO",company:"Evolution AB",show:"Mastermind",speaker:"Stig Brodersen",episode:"TIP681 — Mastermind Q4 2024 (Stig Brodersen, Tobias Carlisle, Hari Ramachandra)",epDate:"8 Dec 2024",entryDate:"—",entry:null,last:null,ret:null,spy:null,excess:null,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"I can only fathom to own five, apparently.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2024-evolution-occidental-petroleum-alpha-metallurgical-resources/",note:"Stig Brodersen's own holding — one of the five individual stocks he owns."},
- {ticker:"OXY",company:"Occidental Petroleum",show:"Mastermind",speaker:"Hari Ramachandra",episode:"TIP681 — Mastermind Q4 2024 (Stig Brodersen, Tobias Carlisle, Hari Ramachandra)",epDate:"8 Dec 2024",entryDate:"9 Dec 2024",entry:48.72,last:58.40,ret:19.87,spy:25.21,excess:-5.34,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"That's why I'm curious, I'm interested in this.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2024-evolution-occidental-petroleum-alpha-metallurgical-resources/",note:"Hari Ramachandra's pick for the quarter — interested, with no holding stated."},
- {ticker:"AMR",company:"Alpha Metallurgical Resources",show:"Mastermind",speaker:"Tobias Carlisle",episode:"TIP681 — Mastermind Q4 2024 (Stig Brodersen, Tobias Carlisle, Hari Ramachandra)",epDate:"8 Dec 2024",entryDate:"9 Dec 2024",entry:232.24,last:155.41,ret:-33.08,spy:25.21,excess:-58.29,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"It's still well and truly, it's one of the cheapest in my model. So if we rebalance, we're likely to continue to hold.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2024-evolution-occidental-petroleum-alpha-metallurgical-resources/",note:"Tobias Carlisle's model holding — one of the cheapest in his model, held on rebalance. Stig separately holds it via Pabrai funds."},
- {ticker:"GOOGL",company:"Alphabet",show:"Mastermind",speaker:"Adam Seessel (Gravity Capital Management)",episode:"TIP686 — Big Tech Stocks (Adam Seessel, Gravity Capital Management)",epDate:"27 Dec 2024",entryDate:"30 Dec 2024",entry:191.24,last:298.7,ret:56.19,spy:28.71,excess:27.48,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"continues to be a major holding",url:"https://www.theinvestorspodcast.com/episodes/big-tech-stocks-adam-seessel/",note:"A major holding in Adam Seessel's Gravity Capital fund — not a portfolio decision. Separate from the other Alphabet rows."},
- {ticker:"AMZN",company:"Amazon",show:"Mastermind",speaker:"Adam Seessel (Gravity Capital Management)",episode:"TIP686 — Big Tech Stocks (Adam Seessel, Gravity Capital Management)",epDate:"27 Dec 2024",entryDate:"30 Dec 2024",entry:221.3,last:267.44,ret:20.85,spy:28.71,excess:-7.86,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"You still own both names in your fund.",url:"https://www.theinvestorspodcast.com/episodes/big-tech-stocks-adam-seessel/",note:"A Gravity Capital fund holding — not a portfolio decision. Separate from the other Amazon rows."},
- {ticker:"PGR",company:"Progressive",show:"Mastermind",speaker:"Adam Seessel (Gravity Capital Management)",episode:"TIP686 — Big Tech Stocks (Adam Seessel, Gravity Capital Management)",epDate:"27 Dec 2024",entryDate:"30 Dec 2024",entry:239.6,last:235.49,ret:-1.72,spy:28.71,excess:-30.43,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"I bought it last summer",url:"https://www.theinvestorspodcast.com/episodes/big-tech-stocks-adam-seessel/",note:"Adam Seessel's fund holding, bought last summer — not a portfolio decision."},
- {ticker:"LMN",company:"Lumine Group",show:"Mastermind",speaker:"Clay Finck",episode:"TIP690 — Top Stocks for 2025 & the Buy List (Eddy Elfenbein)",epDate:"10 Jan 2025",entryDate:"—",entry:null,last:null,ret:null,spy:null,excess:null,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Own-portfolio pick",quote:"I bought this stock in October of 2024... which is why I still have it in my portfolio.",url:"https://www.theinvestorspodcast.com/episodes/top-stocks-for-2025-the-buy-list-eddy-elfenbein/",note:"Clay Finck's own-portfolio purchase from October 2024 — his pick for 2025. Trades on the Canadian Venture Exchange."},
- {ticker:"ADBE",company:"Adobe",show:"Mastermind",speaker:"Eddy Elfenbein",episode:"TIP690 — Top Stocks for 2025 & the Buy List (Eddy Elfenbein)",epDate:"10 Jan 2025",entryDate:"13 Jan 2025",entry:408.50,last:238.54,ret:-41.61,spy:30.23,excess:-71.83,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Buy List add",quote:"",url:"https://www.theinvestorspodcast.com/episodes/top-stocks-for-2025-the-buy-list-eddy-elfenbein/",note:"Added to Eddy Elfenbein's 2025 Buy List. Separate from the Adobe row in the other episode."},
- {ticker:"ALSN",company:"Allison Transmission",show:"Mastermind",speaker:"Eddy Elfenbein",episode:"TIP690 — Top Stocks for 2025 & the Buy List (Eddy Elfenbein)",epDate:"10 Jan 2025",entryDate:"13 Jan 2025",entry:112.24,last:125.65,ret:11.95,spy:30.23,excess:-18.28,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Buy List add",quote:"",url:"https://www.theinvestorspodcast.com/episodes/top-stocks-for-2025-the-buy-list-eddy-elfenbein/",note:"Added to Eddy Elfenbein's 2025 Buy List."},
+ {ticker:"EVO",company:"Evolution AB",show:"The Investor's Podcast Mastermind",speaker:"Stig Brodersen",episode:"TIP681 — Mastermind Q4 2024 (Stig Brodersen, Tobias Carlisle, Hari Ramachandra)",epDate:"8 Dec 2024",entryDate:"—",entry:null,last:null,ret:null,spy:null,excess:null,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"I can only fathom to own five, apparently.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2024-evolution-occidental-petroleum-alpha-metallurgical-resources/",note:"Stig Brodersen's own holding — one of the five individual stocks he owns."},
+ {ticker:"OXY",company:"Occidental Petroleum",show:"The Investor's Podcast Mastermind",speaker:"Hari Ramachandra",episode:"TIP681 — Mastermind Q4 2024 (Stig Brodersen, Tobias Carlisle, Hari Ramachandra)",epDate:"8 Dec 2024",entryDate:"9 Dec 2024",entry:48.72,last:58.40,ret:19.87,spy:25.21,excess:-5.34,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"That's why I'm curious, I'm interested in this.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2024-evolution-occidental-petroleum-alpha-metallurgical-resources/",note:"Hari Ramachandra's pick for the quarter — interested, with no holding stated."},
+ {ticker:"AMR",company:"Alpha Metallurgical Resources",show:"The Investor's Podcast Mastermind",speaker:"Tobias Carlisle",episode:"TIP681 — Mastermind Q4 2024 (Stig Brodersen, Tobias Carlisle, Hari Ramachandra)",epDate:"8 Dec 2024",entryDate:"9 Dec 2024",entry:232.24,last:155.41,ret:-33.08,spy:25.21,excess:-58.29,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Mastermind pick",quote:"It's still well and truly, it's one of the cheapest in my model. So if we rebalance, we're likely to continue to hold.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q4-2024-evolution-occidental-petroleum-alpha-metallurgical-resources/",note:"Tobias Carlisle's model holding — one of the cheapest in his model, held on rebalance. Stig separately holds it via Pabrai funds."},
+ {ticker:"GOOGL",company:"Alphabet",show:"The Investor's Podcast Mastermind",speaker:"Adam Seessel (Gravity Capital Management)",episode:"TIP686 — Big Tech Stocks (Adam Seessel, Gravity Capital Management)",epDate:"27 Dec 2024",entryDate:"30 Dec 2024",entry:191.24,last:298.7,ret:56.19,spy:28.71,excess:27.48,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"continues to be a major holding",url:"https://www.theinvestorspodcast.com/episodes/big-tech-stocks-adam-seessel/",note:"A major holding in Adam Seessel's Gravity Capital fund — not a portfolio decision. Separate from the other Alphabet rows."},
+ {ticker:"AMZN",company:"Amazon",show:"The Investor's Podcast Mastermind",speaker:"Adam Seessel (Gravity Capital Management)",episode:"TIP686 — Big Tech Stocks (Adam Seessel, Gravity Capital Management)",epDate:"27 Dec 2024",entryDate:"30 Dec 2024",entry:221.3,last:267.44,ret:20.85,spy:28.71,excess:-7.86,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"You still own both names in your fund.",url:"https://www.theinvestorspodcast.com/episodes/big-tech-stocks-adam-seessel/",note:"A Gravity Capital fund holding — not a portfolio decision. Separate from the other Amazon rows."},
+ {ticker:"PGR",company:"Progressive",show:"The Investor's Podcast Mastermind",speaker:"Adam Seessel (Gravity Capital Management)",episode:"TIP686 — Big Tech Stocks (Adam Seessel, Gravity Capital Management)",epDate:"27 Dec 2024",entryDate:"30 Dec 2024",entry:239.6,last:235.49,ret:-1.72,spy:28.71,excess:-30.43,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"I bought it last summer",url:"https://www.theinvestorspodcast.com/episodes/big-tech-stocks-adam-seessel/",note:"Adam Seessel's fund holding, bought last summer — not a portfolio decision."},
+ {ticker:"LMN",company:"Lumine Group",show:"The Investor's Podcast Mastermind",speaker:"Clay Finck",episode:"TIP690 — Top Stocks for 2025 & the Buy List (Eddy Elfenbein)",epDate:"10 Jan 2025",entryDate:"—",entry:null,last:null,ret:null,spy:null,excess:null,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Own-portfolio pick",quote:"I bought this stock in October of 2024... which is why I still have it in my portfolio.",url:"https://www.theinvestorspodcast.com/episodes/top-stocks-for-2025-the-buy-list-eddy-elfenbein/",note:"Clay Finck's own-portfolio purchase from October 2024 — his pick for 2025. Trades on the Canadian Venture Exchange."},
+ {ticker:"ADBE",company:"Adobe",show:"The Investor's Podcast Mastermind",speaker:"Eddy Elfenbein",episode:"TIP690 — Top Stocks for 2025 & the Buy List (Eddy Elfenbein)",epDate:"10 Jan 2025",entryDate:"13 Jan 2025",entry:408.50,last:238.54,ret:-41.61,spy:30.23,excess:-71.83,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Buy List add",quote:"",url:"https://www.theinvestorspodcast.com/episodes/top-stocks-for-2025-the-buy-list-eddy-elfenbein/",note:"Added to Eddy Elfenbein's 2025 Buy List. Separate from the Adobe row in the other episode."},
+ {ticker:"ALSN",company:"Allison Transmission",show:"The Investor's Podcast Mastermind",speaker:"Eddy Elfenbein",episode:"TIP690 — Top Stocks for 2025 & the Buy List (Eddy Elfenbein)",epDate:"10 Jan 2025",entryDate:"13 Jan 2025",entry:112.24,last:125.65,ret:11.95,spy:30.23,excess:-18.28,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Buy List add",quote:"",url:"https://www.theinvestorspodcast.com/episodes/top-stocks-for-2025-the-buy-list-eddy-elfenbein/",note:"Added to Eddy Elfenbein's 2025 Buy List."},
  {ticker:"CE",company:"Celanese",show:"The Investor's Podcast",speaker:"Eddy Elfenbein",episode:"TIP690 — Top Stocks for 2025 & the Buy List (Eddy Elfenbein)",epDate:"10 Jan 2025",entryDate:"13 Jan 2025",entry:67.38,last:51.26,ret:-23.92,spy:30.23,excess:-54.15,list:"Closed",ev:"Explicit",flag:"Buy List removal",quote:"",url:"https://www.theinvestorspodcast.com/episodes/top-stocks-for-2025-the-buy-list-eddy-elfenbein/",note:"Removed from Eddy Elfenbein's Buy List for 2025."},
  {ticker:"PII",company:"Polaris",show:"The Investor's Podcast",speaker:"Eddy Elfenbein",episode:"TIP690 — Top Stocks for 2025 & the Buy List (Eddy Elfenbein)",epDate:"10 Jan 2025",entryDate:"13 Jan 2025",entry:55.56,last:64.69,ret:16.43,spy:30.23,excess:-13.79,list:"Closed",ev:"Explicit",flag:"Buy List removal",quote:"",url:"https://www.theinvestorspodcast.com/episodes/top-stocks-for-2025-the-buy-list-eddy-elfenbein/",note:"Removed from Eddy Elfenbein's Buy List for 2025."},
  {ticker:"HSY",company:"Hershey",show:"The Investor's Podcast",speaker:"Eddy Elfenbein",episode:"TIP690 — Top Stocks for 2025 & the Buy List (Eddy Elfenbein)",epDate:"10 Jan 2025",entryDate:"13 Jan 2025",entry:157.28,last:173.29,ret:10.18,spy:30.23,excess:-20.05,list:"Closed",ev:"Explicit",flag:"Buy List removal",quote:"",url:"https://www.theinvestorspodcast.com/episodes/top-stocks-for-2025-the-buy-list-eddy-elfenbein/",note:"Removed from Eddy Elfenbein's Buy List for 2025 — exited at a good time, per the episode."},
@@ -469,36 +507,38 @@ var PICKS = [
  {ticker:"APPF",company:"AppFolio",show:"The Investor's Podcast",speaker:"Clay Finck & Kyle Grieve",episode:"TIP698 — Best Quality Stock Idea Q1 2025",epDate:"13 Feb 2025",entryDate:"14 Feb 2025",entry:217.32,last:222.8,ret:2.52,spy:24.18,excess:-21.66,list:"Watchlist",ev:"Explicit",flag:"Best Quality segment",quote:"It might be one to put on the watch list... I could see the case for sitting on the sidelines and waiting to see if the market offers you a better entry price.",url:"https://www.theinvestorspodcast.com/episodes/best-quality-stock-idea-q1-2025/",note:"A watchlist call, not a portfolio add — waiting for a better entry price. Separate from the AppFolio guest-fund row."},
  /* ---- TIP batches 7–8 (TIP704 / TIP706 / TIP709 / TIP711 / TIP716 / TIP717, Mar–Apr 2025) ---- */
  {ticker:"NVDA",company:"Nvidia",show:"The Investor's Podcast",speaker:"Clay Finck & Tae Kim",episode:"TIP704 — The Nvidia Way w/ Tae Kim",epDate:"6 Mar 2025",entryDate:"7 Mar 2025",entry:112.69,last:166.19,ret:47.48,spy:31.46,excess:16.01,list:"NoDecision",ev:"",flag:"",quote:"On today's episode, I'm joined by Tae Kim to discuss his new book, The NVIDIA Way…",url:"https://www.theinvestorspodcast.com/episodes/the-nvidia-way-w-tae-kim/",note:"A book discussion with author Tae Kim — no buy, watchlist or pass decision for Nvidia."},
- {ticker:"LVMH",company:"LVMH (ticker not verified)",show:"Mastermind",speaker:"Cristiano Souza (Zeno Equity Partners)",episode:"TIP706 — The Founder's Mindset w/ Cristiano Souza",epDate:"13 Mar 2025",entryDate:"—",entry:null,last:null,ret:null,spy:null,excess:null,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"one that a number of listeners are going to be familiar with that you own is LVMH",url:"https://www.theinvestorspodcast.com/episodes/the-founders-mindset-w-cristiano-souza/",note:"A holding in guest Cristiano Souza's Zeno Equity Partners fund — not a portfolio decision. No ticker is assigned — none is stated in the episode."},
- {ticker:"LIN",company:"Linde",show:"Mastermind",speaker:"Cristiano Souza (Zeno Equity Partners)",episode:"TIP706 — The Founder's Mindset w/ Cristiano Souza",epDate:"13 Mar 2025",entryDate:"14 Mar 2025",entry:455.5,last:522.49,ret:14.71,spy:34.52,excess:-19.82,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Why Linde PLC is a core position in his fund",url:"https://www.theinvestorspodcast.com/episodes/the-founders-mindset-w-cristiano-souza/",note:"A core position in guest Cristiano Souza's Zeno Equity Partners fund — not a portfolio decision."},
- {ticker:"APPF",company:"AppFolio",show:"Mastermind",speaker:"Cristiano Souza (Zeno Equity Partners)",episode:"TIP706 — The Founder's Mindset w/ Cristiano Souza",epDate:"13 Mar 2025",entryDate:"14 Mar 2025",entry:216.74,last:222.8,ret:2.8,spy:34.52,excess:-31.73,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"So you also own AppFolio.",url:"https://www.theinvestorspodcast.com/episodes/the-founders-mindset-w-cristiano-souza/",note:"A holding in guest Cristiano Souza's Zeno Equity Partners fund — not a portfolio decision. Separate from the AppFolio Watchlist row."},
- {ticker:"BKNG",company:"Booking Holdings",show:"Mastermind",speaker:"François Rochon (Giverny Capital)",episode:"TIP709 — The Art of Long-Term Investing w/ François Rochon",epDate:"27 Mar 2025",entryDate:"28 Mar 2025",entry:185.37,last:161.2,ret:-13.04,spy:36.26,excess:-49.29,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Why François recently made Booking Holdings and Brown & Brown core positions in his portfolio.",url:"https://www.theinvestorspodcast.com/episodes/the-art-of-long-term-investing-w-francois-rochon/",note:"Recently made a core position in guest François Rochon's Giverny Capital portfolio — not a portfolio decision."},
- {ticker:"BRO",company:"Brown & Brown",show:"Mastermind",speaker:"François Rochon (Giverny Capital)",episode:"TIP709 — The Art of Long-Term Investing w/ François Rochon",epDate:"27 Mar 2025",entryDate:"28 Mar 2025",entry:122.93,last:70.55,ret:-42.61,spy:36.26,excess:-78.87,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Another recent addition to the portfolio is Brown & Brown, which is a smaller holding based on the 13 Fs",url:"https://www.theinvestorspodcast.com/episodes/the-art-of-long-term-investing-w-francois-rochon/",note:"A recent addition to guest François Rochon's Giverny Capital portfolio, a smaller holding — not a portfolio decision."},
- {ticker:"GOOGL",company:"Alphabet",show:"Mastermind",speaker:"François Rochon (Giverny Capital)",episode:"TIP709 — The Art of Long-Term Investing w/ François Rochon",epDate:"27 Mar 2025",entryDate:"28 Mar 2025",entry:154.33,last:298.7,ret:93.55,spy:36.26,excess:57.29,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"I when we purchased it in 2011, so 14 years ago",url:"https://www.theinvestorspodcast.com/episodes/the-art-of-long-term-investing-w-francois-rochon/",note:"Held by guest François Rochon since 2011 — not a portfolio decision. Separate from the other Alphabet rows."},
- {ticker:"NFLX",company:"Netflix",show:"Mastermind",speaker:"Arif Karim (Ensemble Capital)",episode:"TIP711 — Netflix, Ferrari, & Managing Market Volatility w/ Arif Karim",epDate:"4 Apr 2025",entryDate:"7 Apr 2025",entry:86.783,last:62.69,ret:-27.76,spy:50.1,excess:-77.86,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"we held on, we even bought more stock on the way down",url:"https://www.theinvestorspodcast.com/episodes/netflix-ferrari-managing-market-volatility-w-arif-karim/",note:"A holding in guest Arif Karim's Ensemble Capital fund — held through 2022 and added to on the way down. Not a portfolio decision."},
- {ticker:"RACE",company:"Ferrari",show:"Mastermind",speaker:"Arif Karim (Ensemble Capital)",episode:"TIP711 — Netflix, Ferrari, & Managing Market Volatility w/ Arif Karim",epDate:"4 Apr 2025",entryDate:"7 Apr 2025",entry:398.7,last:405.49,ret:1.7,spy:50.11,excess:-48.41,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"you've been invested in Ferrari for a number of years",url:"https://www.theinvestorspodcast.com/episodes/netflix-ferrari-managing-market-volatility-w-arif-karim/",note:"A holding in guest Arif Karim's Ensemble Capital fund for a number of years — not a portfolio decision."},
+ {ticker:"LVMH",company:"LVMH (ticker not verified)",show:"The Investor's Podcast Mastermind",speaker:"Cristiano Souza (Zeno Equity Partners)",episode:"TIP706 — The Founder's Mindset w/ Cristiano Souza",epDate:"13 Mar 2025",entryDate:"—",entry:null,last:null,ret:null,spy:null,excess:null,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"one that a number of listeners are going to be familiar with that you own is LVMH",url:"https://www.theinvestorspodcast.com/episodes/the-founders-mindset-w-cristiano-souza/",note:"A holding in guest Cristiano Souza's Zeno Equity Partners fund — not a portfolio decision. No ticker is assigned — none is stated in the episode."},
+ {ticker:"LIN",company:"Linde",show:"The Investor's Podcast Mastermind",speaker:"Cristiano Souza (Zeno Equity Partners)",episode:"TIP706 — The Founder's Mindset w/ Cristiano Souza",epDate:"13 Mar 2025",entryDate:"14 Mar 2025",entry:455.5,last:522.49,ret:14.71,spy:34.52,excess:-19.82,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Why Linde PLC is a core position in his fund",url:"https://www.theinvestorspodcast.com/episodes/the-founders-mindset-w-cristiano-souza/",note:"A core position in guest Cristiano Souza's Zeno Equity Partners fund — not a portfolio decision."},
+ {ticker:"APPF",company:"AppFolio",show:"The Investor's Podcast Mastermind",speaker:"Cristiano Souza (Zeno Equity Partners)",episode:"TIP706 — The Founder's Mindset w/ Cristiano Souza",epDate:"13 Mar 2025",entryDate:"14 Mar 2025",entry:216.74,last:222.8,ret:2.8,spy:34.52,excess:-31.73,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"So you also own AppFolio.",url:"https://www.theinvestorspodcast.com/episodes/the-founders-mindset-w-cristiano-souza/",note:"A holding in guest Cristiano Souza's Zeno Equity Partners fund — not a portfolio decision. Separate from the AppFolio Watchlist row."},
+ {ticker:"BKNG",company:"Booking Holdings",show:"The Investor's Podcast Mastermind",speaker:"François Rochon (Giverny Capital)",episode:"TIP709 — The Art of Long-Term Investing w/ François Rochon",epDate:"27 Mar 2025",entryDate:"28 Mar 2025",entry:185.37,last:161.2,ret:-13.04,spy:36.26,excess:-49.29,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Why François recently made Booking Holdings and Brown & Brown core positions in his portfolio.",url:"https://www.theinvestorspodcast.com/episodes/the-art-of-long-term-investing-w-francois-rochon/",note:"Recently made a core position in guest François Rochon's Giverny Capital portfolio — not a portfolio decision."},
+ {ticker:"BRO",company:"Brown & Brown",show:"The Investor's Podcast Mastermind",speaker:"François Rochon (Giverny Capital)",episode:"TIP709 — The Art of Long-Term Investing w/ François Rochon",epDate:"27 Mar 2025",entryDate:"28 Mar 2025",entry:122.93,last:70.55,ret:-42.61,spy:36.26,excess:-78.87,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"Another recent addition to the portfolio is Brown & Brown, which is a smaller holding based on the 13 Fs",url:"https://www.theinvestorspodcast.com/episodes/the-art-of-long-term-investing-w-francois-rochon/",note:"A recent addition to guest François Rochon's Giverny Capital portfolio, a smaller holding — not a portfolio decision."},
+ {ticker:"GOOGL",company:"Alphabet",show:"The Investor's Podcast Mastermind",speaker:"François Rochon (Giverny Capital)",episode:"TIP709 — The Art of Long-Term Investing w/ François Rochon",epDate:"27 Mar 2025",entryDate:"28 Mar 2025",entry:154.33,last:298.7,ret:93.55,spy:36.26,excess:57.29,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"I when we purchased it in 2011, so 14 years ago",url:"https://www.theinvestorspodcast.com/episodes/the-art-of-long-term-investing-w-francois-rochon/",note:"Held by guest François Rochon since 2011 — not a portfolio decision. Separate from the other Alphabet rows."},
+ {ticker:"NFLX",company:"Netflix",show:"The Investor's Podcast Mastermind",speaker:"Arif Karim (Ensemble Capital)",episode:"TIP711 — Netflix, Ferrari, & Managing Market Volatility w/ Arif Karim",epDate:"4 Apr 2025",entryDate:"7 Apr 2025",entry:86.783,last:62.69,ret:-27.76,spy:50.1,excess:-77.86,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"we held on, we even bought more stock on the way down",url:"https://www.theinvestorspodcast.com/episodes/netflix-ferrari-managing-market-volatility-w-arif-karim/",note:"A holding in guest Arif Karim's Ensemble Capital fund — held through 2022 and added to on the way down. Not a portfolio decision."},
+ {ticker:"RACE",company:"Ferrari",show:"The Investor's Podcast Mastermind",speaker:"Arif Karim (Ensemble Capital)",episode:"TIP711 — Netflix, Ferrari, & Managing Market Volatility w/ Arif Karim",epDate:"4 Apr 2025",entryDate:"7 Apr 2025",entry:398.7,last:405.49,ret:1.7,spy:50.11,excess:-48.41,list:"Mastermind",stance:"Long",ev:"Thesis",flag:"Guest fund",quote:"you've been invested in Ferrari for a number of years",url:"https://www.theinvestorspodcast.com/episodes/netflix-ferrari-managing-market-volatility-w-arif-karim/",note:"A holding in guest Arif Karim's Ensemble Capital fund for a number of years — not a portfolio decision."},
  {ticker:"AMZN",company:"Amazon",show:"The Investor's Podcast",speaker:"Kyle Grieve",episode:"TIP716 — The Power of Customer Obsession: Amazon's Secret Weapon",epDate:"25 Apr 2025",entryDate:"28 Apr 2025",entry:187.7,last:267.44,ret:42.48,spy:37.45,excess:5.04,list:"NoDecision",ev:"",flag:"",quote:"",url:"https://www.theinvestorspodcast.com/episodes/the-power-of-customer-obsession-amazons-secret-weapon/",note:"A solo history episode on Amazon's early story — no buy, watchlist or pass decision."},
  {ticker:"Berkshire Hathaway",company:"Berkshire Hathaway (ticker not verified)",show:"The Investor's Podcast",speaker:"Chris Bloomstran (Semper Augustus)",episode:"TIP717 — Berkshire Hathaway 2025 w/ Chris Bloomstran",epDate:"27 Apr 2025",entryDate:"—",entry:null,last:null,ret:null,spy:null,excess:null,list:"NoDecision",ev:"",flag:"No ticker stated",quote:"",url:"https://www.theinvestorspodcast.com/episodes/berkshire-hathaway-2025-w-chris-bloomstran/",note:"A guest appraisal of Berkshire Hathaway, with no buy, watchlist or pass decision. No ticker is assigned — none is stated in the episode."},
  /* ---- TIP batches 9–10 (TIP722 / TIP724 / TIP728 / TIP731 / TIP738 / TIP751, May–Sep 2025) ---- */
  {ticker:"BKNG",company:"Booking Holdings",show:"The Investor's Podcast",speaker:"Clay Finck & Kyle Grieve",episode:"TIP722 — Best Quality Stock Idea Q2 2025",epDate:"3 May 2025",entryDate:"5 May 2025",entry:207.645,last:161.2,ret:-22.37,spy:34.36,excess:-56.73,list:"Long",stance:"Long",ev:"Explicit",flag:"Personal add",quote:"So I ended up initiating a starter position in Booking Holdings after doing my initial due diligence in March, 2025.",url:"https://www.theinvestorspodcast.com/episodes/best-quality-stock-idea-q2-2025/",note:"Clay's own-portfolio starter position from March 2025 — not a portfolio decision, and no exact buy date is known. Separate from the Booking guest-fund row."},
  {ticker:"KO",company:"Coca-Cola",show:"The Investor's Podcast",speaker:"Kyle Grieve",episode:"TIP724 — Coca-Cola",epDate:"24 May 2025",entryDate:"27 May 2025",entry:71.78,last:97.44,ret:35.75,spy:28.08,excess:7.67,list:"Pass",ev:"Explicit",flag:"",quote:"The potential returns just have never felt attractive enough for me to warrant an investment.",url:"https://www.theinvestorspodcast.com/episodes/key-insights-from-coca-colas-golden-era/",note:"Admired but never bought — the returns never felt attractive enough."},
- {ticker:"MSFT",company:"Microsoft",show:"Mastermind",speaker:"Stig Brodersen",episode:"TIP728 — Mastermind Q2 2025: Microsoft, Block, Devon Energy, Adyen",epDate:"7 Jun 2025",entryDate:"9 Jun 2025",entry:472.75,last:523,ret:10.63,spy:26.25,excess:-15.62,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"In this episode, my pick is Microsoft.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2025-microsoft-block-devon-energy-adyen/",note:"Stig's Mastermind pick — his stance is to sit on your hands and wait. Not a portfolio decision."},
- {ticker:"DVN",company:"Devon Energy",show:"Mastermind",speaker:"Tobias Carlisle",episode:"TIP728 — Mastermind Q2 2025: Microsoft, Block, Devon Energy, Adyen",epDate:"7 Jun 2025",entryDate:"9 Jun 2025",entry:32.65,last:46.23,ret:41.59,spy:26.25,excess:15.34,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"it's one that I own as part of a basket",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2025-microsoft-block-devon-energy-adyen/",note:"Tobias's Mastermind pick — a holding in his deep-value funds, part of a basket. Not a portfolio decision."},
- {ticker:"XYZ",company:"Block",show:"Mastermind",speaker:"Hari Ramachandra",episode:"TIP728 — Mastermind Q2 2025: Microsoft, Block, Devon Energy, Adyen",epDate:"7 Jun 2025",entryDate:"9 Jun 2025",entry:65.84,last:82.26,ret:24.94,spy:26.25,excess:-1.31,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"I'm talking about Adyen and Block, formerly known as Square.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2025-microsoft-block-devon-energy-adyen/",note:"Hari's Mastermind pick — 'more like a venture bet', no holding stated. Not a portfolio decision."},
- {ticker:"ADYEN",company:"Adyen",show:"Mastermind",speaker:"Hari Ramachandra",episode:"TIP728 — Mastermind Q2 2025: Microsoft, Block, Devon Energy, Adyen",epDate:"7 Jun 2025",entryDate:"9 Jun 2025",entry:1709.6,last:868,cur:"€",ret:-49.23,spy:26.25,excess:-75.48,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"they're richly valued... So that's what gave me a pause off.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2025-microsoft-block-devon-energy-adyen/",note:"Hari's Mastermind pick — paused on valuation. Not a portfolio decision. Euronext Amsterdam listing."},
+ {ticker:"MSFT",company:"Microsoft",show:"The Investor's Podcast Mastermind",speaker:"Stig Brodersen",episode:"TIP728 — Mastermind Q2 2025: Microsoft, Block, Devon Energy, Adyen",epDate:"7 Jun 2025",entryDate:"9 Jun 2025",entry:472.75,last:523,ret:10.63,spy:26.25,excess:-15.62,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"In this episode, my pick is Microsoft.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2025-microsoft-block-devon-energy-adyen/",note:"Stig's Mastermind pick — his stance is to sit on your hands and wait. Not a portfolio decision."},
+ {ticker:"DVN",company:"Devon Energy",show:"The Investor's Podcast Mastermind",speaker:"Tobias Carlisle",episode:"TIP728 — Mastermind Q2 2025: Microsoft, Block, Devon Energy, Adyen",epDate:"7 Jun 2025",entryDate:"9 Jun 2025",entry:32.65,last:46.23,ret:41.59,spy:26.25,excess:15.34,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"it's one that I own as part of a basket",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2025-microsoft-block-devon-energy-adyen/",note:"Tobias's Mastermind pick — a holding in his deep-value funds, part of a basket. Not a portfolio decision."},
+ {ticker:"XYZ",company:"Block",show:"The Investor's Podcast Mastermind",speaker:"Hari Ramachandra",episode:"TIP728 — Mastermind Q2 2025: Microsoft, Block, Devon Energy, Adyen",epDate:"7 Jun 2025",entryDate:"9 Jun 2025",entry:65.84,last:82.26,ret:24.94,spy:26.25,excess:-1.31,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"I'm talking about Adyen and Block, formerly known as Square.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2025-microsoft-block-devon-energy-adyen/",note:"Hari's Mastermind pick — 'more like a venture bet', no holding stated. Not a portfolio decision."},
+ {ticker:"ADYEN",company:"Adyen",show:"The Investor's Podcast Mastermind",speaker:"Hari Ramachandra",episode:"TIP728 — Mastermind Q2 2025: Microsoft, Block, Devon Energy, Adyen",epDate:"7 Jun 2025",entryDate:"9 Jun 2025",entry:1709.6,last:868,cur:"€",ret:-49.23,spy:26.25,excess:-75.48,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"they're richly valued... So that's what gave me a pause off.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q2-2025-microsoft-block-devon-energy-adyen/",note:"Hari's Mastermind pick — paused on valuation. Not a portfolio decision. Euronext Amsterdam listing."},
  {ticker:"RW",company:"Rainwater Equity ETF",show:"The Investor's Podcast",speaker:"Joseph Shaposhnik (guest)",episode:"TIP731 — Owning Best-in-Class Businesses",epDate:"20 Jun 2025",entryDate:"23 Jun 2025",entry:25.27,last:25.852,ret:2.3,spy:26.16,excess:-23.86,list:"NoDecision",ev:"",flag:"",quote:"The ticker is RW.",url:"https://www.theinvestorspodcast.com/episodes/owning-best-in-class-businesses-w-joseph-shaposhnik/",note:"The guest's own fund — no decision for the hosts' portfolio."},
  {ticker:"HEI.A",company:"HEICO",show:"The Investor's Podcast",speaker:"Clay Finck",episode:"TIP738 — HEICO: The Quiet Aerospace Compounder",epDate:"18 Jul 2025",entryDate:"21 Jul 2025",entry:251.46,last:254.19,ret:1.09,spy:20.41,excess:-19.32,list:"Watchlist",ev:"Explicit",flag:"Valuation",quote:"we shouldn't be afraid to add to a company like Heico to our watch list instead, and to simply wait until the market isn't quite as optimistic",url:"https://www.theinvestorspodcast.com/episodes/heico-the-quiet-aerospace-compounder/",note:"Clay's watchlist decision — wait for a less optimistic market. The A shares (HEI.A) over the B shares, at a 22% discount. Separate from the HEICO Watchlist row in the other episode."},
- {ticker:"UBER",company:"Uber",show:"Mastermind",speaker:"Stig Brodersen",episode:"TIP751 — Mastermind Q3 2025: Uber, Merck, Bath & Body Works",epDate:"7 Sep 2025",entryDate:"8 Sep 2025",entry:94.36,last:69.12,ret:-26.75,spy:16.69,excess:-43.44,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"I don't have a position... But I probably would take a position, a 1% position here at today's price of $91.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q3-2025-uber-bath-body-works-merck/",note:"Stig's Mastermind pick — a stated intention only, no position held. Separate from the portfolio Uber row in the other episode. Not a portfolio decision."},
- {ticker:"MRK",company:"Merck",show:"Mastermind",speaker:"Hari Ramachandra",episode:"TIP751 — Mastermind Q3 2025: Uber, Merck, Bath & Body Works",epDate:"7 Sep 2025",entryDate:"8 Sep 2025",entry:84.09,last:146.95,ret:74.75,spy:16.69,excess:58.06,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"my pick today is Merck",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q3-2025-uber-bath-body-works-merck/",note:"Hari's Mastermind pick. Not a portfolio decision."},
- {ticker:"BBWI",company:"Bath & Body Works",show:"Mastermind",speaker:"Tobias Carlisle",episode:"TIP751 — Mastermind Q3 2025: Uber, Merck, Bath & Body Works",epDate:"7 Sep 2025",entryDate:"8 Sep 2025",entry:28.48,last:21.08,ret:-25.98,spy:16.69,excess:-42.67,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"I have a pick, it's called Bath & Body Works. The ticket is BBWI.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q3-2025-uber-bath-body-works-merck/",note:"Tobias's Mastermind pick. Not a portfolio decision."},
+ {ticker:"UBER",company:"Uber",show:"The Investor's Podcast Mastermind",speaker:"Stig Brodersen",episode:"TIP751 — Mastermind Q3 2025: Uber, Merck, Bath & Body Works",epDate:"7 Sep 2025",entryDate:"8 Sep 2025",entry:94.36,last:69.12,ret:-26.75,spy:16.69,excess:-43.44,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"I don't have a position... But I probably would take a position, a 1% position here at today's price of $91.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q3-2025-uber-bath-body-works-merck/",note:"Stig's Mastermind pick — a stated intention only, no position held. Separate from the portfolio Uber row in the other episode. Not a portfolio decision."},
+ {ticker:"MRK",company:"Merck",show:"The Investor's Podcast Mastermind",speaker:"Hari Ramachandra",episode:"TIP751 — Mastermind Q3 2025: Uber, Merck, Bath & Body Works",epDate:"7 Sep 2025",entryDate:"8 Sep 2025",entry:84.09,last:146.95,ret:74.75,spy:16.69,excess:58.06,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"my pick today is Merck",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q3-2025-uber-bath-body-works-merck/",note:"Hari's Mastermind pick. Not a portfolio decision."},
+ {ticker:"BBWI",company:"Bath & Body Works",show:"The Investor's Podcast Mastermind",speaker:"Tobias Carlisle",episode:"TIP751 — Mastermind Q3 2025: Uber, Merck, Bath & Body Works",epDate:"7 Sep 2025",entryDate:"8 Sep 2025",entry:28.48,last:21.08,ret:-25.98,spy:16.69,excess:-42.67,list:"Mastermind",stance:"Long",ev:"Explicit",flag:"Mastermind pick",quote:"I have a pick, it's called Bath & Body Works. The ticket is BBWI.",url:"https://www.theinvestorspodcast.com/episodes/mastermind-q3-2025-uber-bath-body-works-merck/",note:"Tobias's Mastermind pick. Not a portfolio decision."},
  /* ---- TIP batch 11 (TIP761, Oct 2025) ---- */
  {ticker:"TSLA",company:"Tesla",show:"The Investor's Podcast",speaker:"Clay Finck",episode:"TIP761 — Tesla Stock Deep Dive w/ Clay Finck",epDate:"16 Oct 2025",entryDate:"17 Oct 2025",entry:439.31,last:397.45,ret:-9.53,spy:13.96,excess:-23.49,list:"NoDecision",ev:"",flag:"",quote:"I don't know whether Tesla will be a massive success or a total flop",url:"https://www.theinvestorspodcast.com/episodes/tesla-stock-deep-dive-w-clay-finck/",note:"A solo deep dive — no buy, watchlist or pass decision in the episode."}
 ];
 
-var state = { q:"", show:"", list:[], sort:"date" };
+var PAGE_SIZE = 5;
+var state = { q:"", show:"", list:[], sortKey:"date", sortDir:"desc", page:1 };
 var listEl = document.getElementById('list');
 var emptyEl = document.getElementById('empty');
 var countEl = document.getElementById('countLine');
+var paginationEl = document.getElementById('pagination');
 
 function stanceOf(p){ return p.list==="Mastermind" ? (p.stance==="Long"?"Long":"Review") : p.list; }
 function badgeClass(p){ var l=stanceOf(p); return l==="Long"?"b-long":l==="Watchlist"?"b-watch":l==="Pass"?"b-pass":l==="Closed"?"b-closed":l==="Review"?"b-review":l==="NoDecision"?"b-nodecision":"b-pass"; }
@@ -517,6 +557,114 @@ function linksHtml(p){
   return urls.map(function(u){ return '<a href="'+u+'" target="_blank" rel="noopener">'+linkLabel(u)+'</a>'; }).join(' &middot; ');
 }
 
+var MONTHS = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function epTime(p){
+  var m = /^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/.exec(p.epDate || "");
+  if(!m) return 0;
+  return new Date(+m[3], MONTHS[m[2]] || 0, +m[1]).getTime();
+}
+function sortRows(rows){
+  var dir = state.sortDir === "asc" ? 1 : -1;
+  var key = state.sortKey;
+  rows.sort(function(a,b){
+    var cmp = 0;
+    if(key === "ticker"){ cmp = a.ticker.localeCompare(b.ticker) * dir; }
+    else if(key === "return" || key === "excess"){
+      var fa = key === "return" ? a.ret : a.excess;
+      var fb = key === "return" ? b.ret : b.excess;
+      if(fa === null || fa === undefined){ return (fb === null || fb === undefined) ? (PICKS.indexOf(a) - PICKS.indexOf(b)) : 1; }
+      if(fb === null || fb === undefined){ return -1; }
+      cmp = (fa - fb) * dir;
+    }
+    else { cmp = (epTime(a) - epTime(b)) * dir; }
+    if(cmp === 0) cmp = PICKS.indexOf(a) - PICKS.indexOf(b);
+    return cmp;
+  });
+}
+function thSort(key, label){
+  var active = state.sortKey === key;
+  var arrow = active ? (state.sortDir === "asc" ? "&#9650;" : "&#9660;") : "&#8597;";
+  return '<th scope="col"' + (active ? ' aria-sort="' + (state.sortDir === "asc" ? "ascending" : "descending") + '"' : '') + '><button type="button" class="th-sort" data-sortkey="' + key + '" aria-label="Sort by ' + label + '">' + label + ' <span class="sort-arrow' + (active ? ' on' : '') + '" aria-hidden="true">' + arrow + '</span></button></th>';
+}
+function tableRowHtml(p){
+  var retCell;
+  if(p.pending){ retCell = '<span class="pending">Awaiting re-price</span>'; }
+  else if(p.ret !== null && p.ret !== undefined){
+    retCell = '<div class="t-ret ' + cls(p.ret) + '">' + fmtPct(p.ret) + '</div>'
+      + (p.excess !== null && p.excess !== undefined ? '<div class="t-sub">Excess <span class="' + cls(p.excess) + '">' + fmtPP(p.excess) + '</span> vs SPY</div>' : '');
+  } else { retCell = '<span class="muted">&mdash;</span>'; }
+  var prices = '';
+  if(p.entry !== null && p.entry !== undefined) prices += '<div class="t-price">Entry ' + fmtPrice(p.entry, p.cur) + '</div>';
+  if(p.last !== null && p.last !== undefined) prices += '<div class="t-price">Last ' + fmtPrice(p.last, p.cur) + '</div>';
+  if(!prices) prices = '<span class="muted">&mdash;</span>';
+  var srcLinks = linksHtml(p);
+  var noteCell = '';
+  if(p.quote) noteCell += '<span class="q">&ldquo;' + p.quote + '&rdquo;</span>';
+  if(p.note) noteCell += '<span class="n">' + p.note + '</span>';
+  if(srcLinks) noteCell += '<span class="n">' + srcLinks + '</span>';
+  if(!noteCell) noteCell = '<span class="muted">&mdash;</span>';
+  var flags = '';
+  if(p.ev) flags += '<span class="flag">' + p.ev + '</span>';
+  if(p.flag) flags += '<span class="flag">' + p.flag + '</span>';
+  return '<tr>'
+    + '<td><span class="ticker">' + p.ticker + '</span></td>'
+    + '<td><div class="t-company">' + p.company + '</div><div class="t-sub"><b>' + p.speaker + '</b> &middot; ' + p.show + '<br>' + p.episode + '</div></td>'
+    + '<td><span class="badge ' + badgeClass(p) + '">' + badgeLabel(p) + '</span>' + (flags ? '<div class="t-flags">' + flags + '</div>' : '') + '</td>'
+    + '<td><div class="t-date">' + p.epDate + '</div>' + (p.entryDate && p.entryDate !== "—" ? '<div class="t-sub">Entry ' + p.entryDate + '</div>' : '') + '</td>'
+    + '<td>' + retCell + '</td>'
+    + '<td>' + prices + '</td>'
+    + '<td class="t-note">' + noteCell + '</td>'
+    + '</tr>';
+}
+function tableHtml(pageRows){
+  if(!pageRows.length) return "";
+  return '<div class="records-table-wrap"><table class="records" aria-label="Records">'
+    + '<colgroup><col style="width:9%"><col style="width:24%"><col style="width:11%"><col style="width:10%"><col style="width:11%"><col style="width:10%"><col style="width:25%"></colgroup>'
+    + '<thead><tr>'
+    + thSort("ticker", "Ticker")
+    + '<th scope="col">Pick &amp; episode</th>'
+    + '<th scope="col">Category</th>'
+    + thSort("date", "Date")
+    + thSort("return", "Return")
+    + '<th scope="col">Prices</th>'
+    + '<th scope="col">Note &amp; source</th>'
+    + '</tr></thead><tbody>'
+    + pageRows.map(tableRowHtml).join('')
+    + '</tbody></table></div>';
+}
+function syncSortControls(){
+  var sel = document.getElementById('sortSel');
+  if(!sel) return;
+  if(state.sortKey === "date" && state.sortDir === "desc") sel.value = "date";
+  else if(state.sortKey === "ticker" && state.sortDir === "asc") sel.value = "ticker";
+  else if(state.sortKey === "excess" && state.sortDir === "desc") sel.value = "excess";
+  else sel.selectedIndex = -1;
+}
+
+function renderPagination(total, totalPages){
+  if(!total){ paginationEl.innerHTML = ""; return; }
+  var cur = state.page;
+  var pages = [];
+  if(totalPages <= 7){
+    for(var i=1;i<=totalPages;i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if(cur > 3) pages.push("…");
+    var lo = Math.max(2, cur-1), hi = Math.min(totalPages-1, cur+1);
+    for(var j=lo;j<=hi;j++) pages.push(j);
+    if(cur < totalPages-2) pages.push("…");
+    pages.push(totalPages);
+  }
+  var html = '<button type="button" class="pg-btn" data-page="prev"'+(cur<=1?' disabled':'')+'>&larr; Previous</button>';
+  pages.forEach(function(n){
+    if(n==="…"){ html += '<span class="pg-ellipsis" aria-hidden="true">&hellip;</span>'; }
+    else { html += '<button type="button" class="pg-btn" data-page="'+n+'"'+(n===cur?' aria-current="page"':'')+'>'+n+'</button>'; }
+  });
+  html += '<button type="button" class="pg-btn" data-page="next"'+(cur>=totalPages?' disabled':'')+'>Next &rarr;</button>';
+  html += '<div class="pg-info">Page '+cur+' of '+totalPages+'</div>';
+  paginationEl.innerHTML = html;
+}
+
 function render(){
   var rows = PICKS.filter(function(p){
     if(state.list.length && state.list.indexOf(p.list)===-1) return false;
@@ -530,13 +678,20 @@ function render(){
     }
     return true;
   });
-  if(state.sort==="excess"){ rows.sort(function(a,b){ return (b.excess===null?-999:b.excess)-(a.excess===null?-999:a.excess); }); }
-  else if(state.sort==="ticker"){ rows.sort(function(a,b){ return a.ticker.localeCompare(b.ticker); }); }
-  else { rows.sort(function(a,b){ return PICKS.indexOf(a)-PICKS.indexOf(b); }); }
+  sortRows(rows);
 
-  countEl.textContent = "Showing "+rows.length+" of "+PICKS.length+" records on this page (grouped where one record covers several tickers, e.g. Melvin's preferreds)";
-  emptyEl.style.display = rows.length? "none":"block";
-  listEl.innerHTML = rows.map(function(p){
+  var total = rows.length;
+  var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if(state.page > totalPages) state.page = totalPages;
+  if(state.page < 1) state.page = 1;
+  var startIdx = total ? (state.page - 1) * PAGE_SIZE : 0;
+  var endIdx = Math.min(startIdx + PAGE_SIZE, total);
+  var pageRows = rows.slice(startIdx, endIdx);
+  countEl.textContent = total ? ("Showing "+(startIdx+1)+"\u2013"+endIdx+" of "+total+" records") : "Showing 0 of 0 records";
+  emptyEl.style.display = total ? "none" : "block";
+  renderPagination(total, totalPages);
+  syncSortControls();
+  var cardsHtml = pageRows.map(function(p){
     var nums = "";
     if(p.entryDate && p.entryDate!=="—") nums += '<div class="num"><div class="k">Entry · '+p.entryDate+'</div><div class="v">'+(fmtPrice(p.entry,p.cur)||'<span class="muted">to verify</span>')+'</div></div>';
     if(p.last!==null && p.last!==undefined) nums += '<div class="num"><div class="k">Last close · '+(p.lastDate||"12 Nov 2026")+'</div><div class="v">'+fmtPrice(p.last,p.cur)+'</div></div>';
@@ -562,6 +717,7 @@ function render(){
       + (p.note? '<p class="note">'+p.note+'</p>':'')
       + '</article>';
   }).join('');
+  listEl.innerHTML = tableHtml(pageRows) + '<div class="cards-view">' + cardsHtml + '</div>';
 }
 
 function setCounts(){
@@ -575,9 +731,34 @@ function setCounts(){
   document.getElementById('cNoDecision').textContent = c.NoDecision;
 }
 
-document.getElementById('q').addEventListener('input', function(e){ state.q = e.target.value.trim(); render(); });
-document.getElementById('showSel').addEventListener('change', function(e){ state.show = e.target.value; render(); });
-document.getElementById('sortSel').addEventListener('change', function(e){ state.sort = e.target.value; render(); });
+document.getElementById('q').addEventListener('input', function(e){ state.q = e.target.value.trim(); state.page = 1; render(); });
+document.getElementById('showSel').addEventListener('change', function(e){ state.show = e.target.value; state.page = 1; render(); });
+document.getElementById('sortSel').addEventListener('change', function(e){
+  var v = e.target.value;
+  if(v === "excess"){ state.sortKey = "excess"; state.sortDir = "desc"; }
+  else if(v === "ticker"){ state.sortKey = "ticker"; state.sortDir = "asc"; }
+  else { state.sortKey = "date"; state.sortDir = "desc"; }
+  state.page = 1;
+  render();
+});
+listEl.addEventListener('click', function(e){
+  var btn = e.target.closest('.th-sort'); if(!btn) return;
+  var key = btn.getAttribute('data-sortkey');
+  if(state.sortKey === key){ state.sortDir = state.sortDir === "asc" ? "desc" : "asc"; }
+  else { state.sortKey = key; state.sortDir = key === "ticker" ? "asc" : "desc"; }
+  state.page = 1;
+  render();
+});
+paginationEl.addEventListener('click', function(e){
+  var btn = e.target.closest('.pg-btn'); if(!btn || btn.disabled) return;
+  var v = btn.getAttribute('data-page');
+  if(v==="prev") state.page = Math.max(1, state.page - 1);
+  else if(v==="next") state.page = state.page + 1;
+  else state.page = parseInt(v, 10) || 1;
+  render();
+  var picksSection = document.getElementById('picks');
+  if(picksSection) picksSection.scrollIntoView({block:'start'});
+});
 document.getElementById('chips').addEventListener('click', function(e){
   var btn = e.target.closest('.chip'); if(!btn) return;
   var v = btn.getAttribute('data-list');
@@ -588,6 +769,7 @@ document.getElementById('chips').addEventListener('click', function(e){
     var lv = all[i].getAttribute('data-list');
     all[i].setAttribute('aria-pressed', lv==="" ? (state.list.length===0 ? 'true':'false') : (state.list.indexOf(lv)!==-1 ? 'true':'false'));
   }
+  state.page = 1;
   render();
 });
 setCounts();

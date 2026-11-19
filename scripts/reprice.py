@@ -6,7 +6,11 @@ latest completed trading day, recomputes ret / spy / excess vs SPY, updates
 the date strings, and writes index.html back.
 
 Method (matches the manual re-prices to date):
-  * Prices come from the Yahoo Finance chart API (daily closes, unadjusted).
+  * Prices come from the StockAnalysis API (daily closes, unadjusted) for
+    SPY and every US-listed ticker. The Yahoo Finance chart API is used
+    only for the tickers StockAnalysis does not cover (foreign listings,
+    plus the US-listed NTDOY and OTCM) — Yahoo rate-limits GitHub's
+    shared runner IPs, so it must never be the primary source.
   * Entry prices, classifications and entry dates NEVER change.
   * ret  = (last / entry - 1) * 100
   * The file stores no SPY entry price per record, so the SPY entry close is
@@ -31,10 +35,12 @@ Method (matches the manual re-prices to date):
     with "already current". If the latest SPY close is the as-of date (e.g.
     a market holiday, or Yahoo has not published the close yet) nothing is
     written.
-  * Any price-fetch failure (after retries) or cross-check mismatch is a
-    fatal error: the script prints the problem and exits non-zero WITHOUT
-    writing the file, so the workflow fails loudly instead of writing bad
-    data.
+  * A StockAnalysis fetch failure (after retries) or a cross-check
+    mismatch is a fatal error: the script prints the problem and exits
+    non-zero WITHOUT writing the file, so the workflow fails loudly
+    instead of writing bad data. A Yahoo fetch failure is NOT fatal:
+    the affected record is left unchanged and a warning is logged, so
+    Yahoo rate-limiting can never fail the run.
 
 Usage:
   python3 scripts/reprice.py [--file path/to/index.html]
@@ -57,6 +63,8 @@ from decimal import ROUND_HALF_UP, Decimal
 
 # ---------------------------------------------------------------- constants
 
+STOCKANALYSIS_HISTORY = ("https://api.stockanalysis.com/api/symbol/s/{sym}"
+                         "/history?range=3mo&period=Daily")
 YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=3mo&interval=1d"
 USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
@@ -64,16 +72,41 @@ USER_AGENT = (
 )
 SPY_SYMBOL = "SPY"
 
-# File ticker -> Yahoo symbol. The file stores display tickers; Yahoo needs
-# the exchange suffix (or a hyphen for US class shares). Validated against
-# the 18 Nov 2026 re-price (0 mismatches across all priced records).
-SYMBOL_MAP = {
-    "HWDN": "HWDN.L",    # Howden Joinery, London
-    "UHR": "UHR.SW",     # Swatch, Zurich
-    "ADYEN": "ADYEN.AS",  # Adyen, Amsterdam
-    "EXO": "EXO.AS",     # Exor (TIP836 row); plain "EXO" returns no Yahoo data
-    "BRK.B": "BRK-B",    # Yahoo chart API wants a hyphen for class shares
-    "HEI.A": "HEI-A",
+# Tickers StockAnalysis does not cover, so they are priced from Yahoo.
+# Determined 19 Nov 2026 by testing every priced ticker in index.html
+# against the StockAnalysis API: 109 of 128 matched, and these 17 did
+# not. 15 are foreign listings; NTDOY (Nintendo ADR) and OTCM (OTC
+# Markets Group) are US-listed but StockAnalysis has no data for them.
+# Yahoo failures for these tickers are tolerated (see series_for).
+YAHOO_TICKERS = {
+    "121440.KQ",  # Korea (KOSDAQ)
+    "ADYEN",      # Adyen, Amsterdam
+    "CPG.L",      # Compass Group, London
+    "EQT.ST",     # EQT, Stockholm
+    "EXO",        # Exor (TIP836 row); plain "EXO" returns no Yahoo data
+    "EXO.AS",     # Exor, Amsterdam
+    "FOUR.L",     # 4imprint, London
+    "HWDN",       # Howden Joinery, London
+    "INF.L",      # Informa, London
+    "ITX.MC",     # Inditex, Madrid
+    "KER.PA",     # Kering, Paris
+    "MC.PA",      # LVMH, Paris
+    "NTDOY",      # Nintendo ADR (US-listed, no StockAnalysis data)
+    "OTCM",       # OTC Markets Group (US-listed, no StockAnalysis data)
+    "RMS.PA",     # Hermes, Paris
+    "UHR",        # Swatch, Zurich
+    "WISE.L",     # Wise, London
+}
+
+# File ticker -> Yahoo symbol, for the bare foreign tickers (the dotted
+# ones are already Yahoo symbols and are used as-is). StockAnalysis takes
+# the file's own spelling, including the dot in class shares (BRK.B,
+# HEI.A), so no mapping is needed for it.
+YAHOO_SYMBOL_MAP = {
+    "HWDN": "HWDN.L",
+    "UHR": "UHR.SW",
+    "ADYEN": "ADYEN.AS",
+    "EXO": "EXO.AS",
 }
 
 # Never re-price: WBD ceased trading after the 5 Oct 2026 close.
@@ -83,8 +116,8 @@ HELD_TICKERS = {"WBD"}
 # target date is treated as stale data and fails the run.
 MAX_STALE_DAYS = 10
 
-# Cross-check tolerance for stored `last` vs Yahoo's as-of close: the larger
-# of 2 cents or 0.05% of the price.
+# Cross-check tolerance for stored `last` vs the source's as-of close: the
+# larger of 2 cents or 0.05% of the price.
 TOL_ABS = 0.02
 TOL_REL = 0.0005
 
@@ -108,6 +141,60 @@ def r2(x):
 
 
 # ---------------------------------------------------------------- fetching
+
+class SymbolNotCovered(RuntimeError):
+    """StockAnalysis has no data for this symbol (HTTP 400/404)."""
+
+
+def fetch_stockanalysis(symbol, attempts=5):
+    """Daily closes from the StockAnalysis API -> {date: close}. Uses the
+    "c" (unadjusted close) field; "a" is the adjusted close and is NOT
+    used. Retries with exponential backoff on HTTP 429 / 5xx / network
+    errors. A 400/404 means the symbol is not covered, so it raises
+    SymbolNotCovered (the caller falls back to Yahoo)."""
+    url = STOCKANALYSIS_HISTORY.format(sym=symbol)
+    last_err = None
+    for attempt in range(attempts):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=25) as resp:
+                data = json.load(resp)
+            if data.get("status") != 200 or not data.get("data"):
+                if data.get("status") in (400, 404):
+                    raise SymbolNotCovered(
+                        "StockAnalysis has no data for %s (status %s)"
+                        % (symbol, data.get("status")))
+                raise RuntimeError("StockAnalysis error for %s: status %s"
+                                   % (symbol, data.get("status")))
+            series = {}
+            for row in data["data"]:
+                if row.get("c") is None or not row.get("t"):
+                    continue
+                d = datetime.strptime(row["t"], "%Y-%m-%d").date()
+                series[d] = float(row["c"])
+            if not series:
+                raise SymbolNotCovered(
+                    "StockAnalysis returned no closes for %s" % symbol)
+            return series
+        except urllib.error.HTTPError as exc:
+            # 400/404 is "not covered", not transient: do not retry.
+            if exc.code in (400, 404):
+                raise SymbolNotCovered(
+                    "StockAnalysis has no data for %s: HTTP %s"
+                    % (symbol, exc.code))
+            if exc.code in (401, 403):
+                raise RuntimeError("StockAnalysis request failed for %s: HTTP %s"
+                                   % (symbol, exc.code))
+            last_err = exc
+        except (urllib.error.URLError, TimeoutError) as exc:
+            last_err = exc
+        delay = (2 ** attempt) + (0.5 if attempt % 2 else 0.0)
+        print("  retry %s in %.1fs (%s)" % (symbol, delay, last_err),
+              file=sys.stderr)
+        time.sleep(delay)
+    raise RuntimeError("StockAnalysis request failed for %s after %d attempts: %s"
+                       % (symbol, attempts, last_err))
+
 
 def fetch_chart(symbol, attempts=5):
     """Daily closes from Yahoo chart API -> {date: close}. Retries with
@@ -273,15 +360,15 @@ def main():
 
     # --- SPY: as-of close and latest close -------------------------------
     print("fetching SPY ...")
-    spy_series = fetch_chart(SPY_SYMBOL)
+    spy_series = fetch_stockanalysis(SPY_SYMBOL)
     as_of_spy_date, as_of_spy = close_on_or_before(spy_series, as_of)
     if as_of_spy_date != as_of:
         sys.exit("ERROR: no SPY close on the as-of date %s (latest on/before: %s)"
                  % (as_of_str, as_of_spy_date))
     target = max(spy_series)
     target_spy = r2(spy_series[target])
-    # Round the SPY closes to 2dp first: Yahoo returns raw floats (e.g.
-    # 24.190000534057617), and the 2dp values are the true closes.
+    # Round the SPY closes to 2dp first: the API can return extra
+    # precision (e.g. 24.703), and the 2dp values are the true closes.
     as_of_spy = r2(as_of_spy)
     target_str = fmt_date(target)
     print("SPY as-of close %s: %.2f ; latest close %s: %.2f"
@@ -303,14 +390,50 @@ def main():
     repriced = 0
     skipped_no_price = 0
     skipped_held = 0
+    skipped_foreign = 0
     new_texts = []
-    fetch_cache = {}
 
-    def get_series(symbol):
-        if symbol not in fetch_cache:
-            fetch_cache[symbol] = fetch_chart(symbol)
+    sa_cache = {}
+    yh_cache = {}
+
+    def get_sa_series(symbol):
+        if symbol not in sa_cache:
+            sa_cache[symbol] = fetch_stockanalysis(symbol)
+            time.sleep(0.15)  # be polite between requests
+        return sa_cache[symbol]
+
+    def get_yahoo_series(symbol):
+        if symbol not in yh_cache:
+            yh_cache[symbol] = fetch_chart(symbol)
             time.sleep(0.15)  # be polite to Yahoo between symbols
-        return fetch_cache[symbol]
+        return yh_cache[symbol]
+
+    def series_for(ticker):
+        """Closes for one file ticker -> {date: close}, or None to leave
+        the record unchanged. StockAnalysis is primary; Yahoo is used
+        only for the tickers it does not cover (YAHOO_TICKERS) or when
+        StockAnalysis says a symbol is not covered. A Yahoo failure only
+        skips the record (with a warning) — it never fails the run.
+        Raises RuntimeError only when StockAnalysis fails for a ticker
+        it is supposed to cover."""
+        if ticker in YAHOO_TICKERS:
+            sym = YAHOO_SYMBOL_MAP.get(ticker, ticker)
+            try:
+                return get_yahoo_series(sym)
+            except RuntimeError as exc:
+                warnings.append("%s: Yahoo fetch failed (%s) — leaving unchanged"
+                                % (ticker, exc))
+                return None
+        try:
+            return get_sa_series(ticker)
+        except SymbolNotCovered:
+            sym = YAHOO_SYMBOL_MAP.get(ticker, ticker)
+            try:
+                return get_yahoo_series(sym)
+            except RuntimeError as exc:
+                warnings.append("%s: not covered by StockAnalysis and Yahoo fetch "
+                                "failed (%s) — leaving unchanged" % (ticker, exc))
+                return None
 
     for (_s, _e, obj) in spans:
         f = record_fields(obj)
@@ -330,34 +453,48 @@ def main():
             continue
 
         # --- fetch the ticker's closes -----------------------------------
-        try:
-            if ticker == "MSGS":
-                msgk = get_series("MSGK")
-                msgr = get_series("MSGR")
+        if ticker == "MSGS":
+            try:
+                msgk = series_for("MSGK")
+                msgr = series_for("MSGR")
+            except RuntimeError as exc:
+                errors.append("MSGS: %s" % exc)
+                new_texts.append(obj)
+                continue
+            if msgk is None or msgr is None:
+                # series_for already logged the warning.
+                skipped_foreign += 1
+                new_texts.append(obj)
+                continue
 
-                def combined(series_date):
-                    d1, c1 = close_on_or_before(msgk, series_date)
-                    d2, c2 = close_on_or_before(msgr, series_date)
-                    if d1 is None or d2 is None:
-                        return None, None
-                    return min(d1, d2), r2(c1 + 0.5 * c2)
+            def combined(series_date):
+                d1, c1 = close_on_or_before(msgk, series_date)
+                d2, c2 = close_on_or_before(msgr, series_date)
+                if d1 is None or d2 is None:
+                    return None, None
+                return min(d1, d2), r2(c1 + 0.5 * c2)
 
-                as_of_d, as_of_last = combined(as_of)
-                tgt_d, new_last = combined(target)
-                stale = (target - tgt_d).days if tgt_d else None
-            else:
-                sym = SYMBOL_MAP.get(ticker, ticker)
-                series = get_series(sym)
-                as_of_d, as_of_last = close_on_or_before(series, as_of)
-                tgt_d, new_last = close_on_or_before(series, target)
-                stale = (target - tgt_d).days if tgt_d else None
-        except RuntimeError as exc:
-            errors.append("%s: %s" % (ticker, exc))
-            new_texts.append(obj)
-            continue
+            as_of_d, as_of_last = combined(as_of)
+            tgt_d, new_last = combined(target)
+            stale = (target - tgt_d).days if tgt_d else None
+        else:
+            try:
+                series = series_for(ticker)
+            except RuntimeError as exc:
+                errors.append("%s: %s" % (ticker, exc))
+                new_texts.append(obj)
+                continue
+            if series is None:
+                # series_for already logged the warning.
+                skipped_foreign += 1
+                new_texts.append(obj)
+                continue
+            as_of_d, as_of_last = close_on_or_before(series, as_of)
+            tgt_d, new_last = close_on_or_before(series, target)
+            stale = (target - tgt_d).days if tgt_d else None
 
-        # Round closes to 2dp now: Yahoo returns raw floats (e.g.
-        # 24.190000534057617) and the file stores 2dp values. Rounding here
+        # Round closes to 2dp now: the sources can return extra precision
+        # (e.g. 24.703) and the file stores 2dp values. Rounding here
         # keeps the cross-check, the stored `last`, and the return maths all
         # consistent with the 2dp values in the file.
         if as_of_last is not None:
@@ -367,17 +504,16 @@ def main():
 
         # --- cross-check against the stored `last` -----------------------
         if as_of_last is None:
-            errors.append("%s: no Yahoo close on or before as-of %s"
+            errors.append("%s: no close on or before as-of %s"
                           % (ticker, as_of_str))
             new_texts.append(obj)
             continue
         tol = max(TOL_ABS, TOL_REL * abs(f["last"]))
         if abs(as_of_last - f["last"]) > tol:
             errors.append(
-                "%s: cross-check failed — stored last %.2f but Yahoo close "
-                "on %s is %.2f (symbol %s)"
-                % (ticker, f["last"], as_of_d, as_of_last,
-                   SYMBOL_MAP.get(ticker, ticker)))
+                "%s: cross-check failed — stored last %.2f but close "
+                "on %s is %.2f"
+                % (ticker, f["last"], as_of_d, as_of_last))
             new_texts.append(obj)
             continue
 
@@ -467,8 +603,9 @@ def main():
     with open(index_path, "w", encoding="utf-8") as fh:
         fh.write(new_html)
 
-    print("re-priced %d records to %s (SPY %.2f); skipped %d no-price, %d held"
-          % (repriced, target_str, target_spy, skipped_no_price, skipped_held))
+    print("re-priced %d records to %s (SPY %.2f); skipped %d no-price, %d held, %d Yahoo-unavailable"
+          % (repriced, target_str, target_spy, skipped_no_price, skipped_held,
+             skipped_foreign))
     for w in warnings:
         print("  warning: " + w)
     gh_out = os.environ.get("GITHUB_OUTPUT")

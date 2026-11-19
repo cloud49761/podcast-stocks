@@ -99,6 +99,50 @@
   .clear-filters[hidden]{display:none !important}
   .count-line{font-size:13px;color:var(--ink3);margin:16px 2px 0;font-variant-numeric:tabular-nums}
 
+  /* ---------- quick views / pitched more than once ---------- */
+  .quickviews{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .qv-label{font-size:12.5px;font-weight:600;color:var(--ink2)}
+  .qv-btn{border:1px solid var(--line2);background:var(--surface);color:var(--ink2);border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s ease,color .15s ease,border-color .15s ease}
+  .qv-btn:hover{border-color:var(--ink3);color:var(--ink)}
+  .qv-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .qv-btn[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+  @media (prefers-color-scheme: dark){ .qv-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)} }
+  .qv-btn .c{opacity:.6;font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:600;margin-left:5px}
+  .repeat-panel{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+  .repeat-panel[hidden]{display:none !important}
+  .repeat-count{margin:0;font-size:14px;line-height:1.6;color:var(--ink2)}
+  .repeat-count strong{color:var(--ink);font-weight:700}
+  .repeat-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .repeat-ticker{display:inline-flex;gap:6px;align-items:baseline;border:1px solid var(--line2);border-radius:999px;padding:6px 12px;font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--ink);background:var(--surface2)}
+  .repeat-ticker:hover{border-color:var(--accent);color:var(--accent);text-decoration:none}
+  .repeat-ticker:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .repeat-ticker .x{font-size:11.5px;color:var(--ink3);font-weight:600}
+
+  /* ---------- per-show summary table ---------- */
+  .summary-wrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-top:14px;overflow:hidden}
+  table.summary{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.summary th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);padding:13px 12px 11px;border-bottom:2px solid var(--line);white-space:nowrap;background:var(--surface)}
+  table.summary th:first-child,table.summary td:first-child{padding-left:16px}
+  table.summary th:last-child,table.summary td:last-child{padding-right:16px}
+  table.summary td{padding:13px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5;font-variant-numeric:tabular-nums}
+  table.summary tbody tr:last-child td{border-bottom:none}
+  table.summary tbody tr{transition:background .12s ease}
+  table.summary tbody tr:hover td{background:var(--surface2)}
+  table.summary th.r,table.summary td.r{text-align:right}
+  table.summary td.summary-show{font-weight:600}
+  table.summary .best-t{font-family:"IBM Plex Mono",monospace;font-weight:700;color:var(--navy)}
+  @media (max-width:760px){
+    table.summary thead{display:none}
+    table.summary,table.summary tbody,table.summary tr,table.summary td{display:block;width:100%}
+    table.summary tr{padding:12px 16px;border-bottom:1px solid var(--line)}
+    table.summary tr:last-child{border-bottom:none}
+    table.summary td{border-bottom:none;padding:3px 0;text-align:left;display:flex;justify-content:space-between;gap:16px;align-items:baseline}
+    table.summary th.r,table.summary td.r{text-align:left}
+    table.summary td::before{content:attr(data-th);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);flex:none;padding-top:2px}
+    table.summary td.summary-show{display:block;font-size:15px;padding-bottom:6px}
+    table.summary td.summary-show::before{display:none}
+  }
+
   /* ---------- legend ---------- */
   .legend{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}
   .legend-row{display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap}
@@ -334,6 +378,10 @@
       <button class="chip" data-list="NoDecision" aria-pressed="false">Discussed — no decision<span class="c" id="cNoDecision"></span></button>
       <button type="button" class="clear-filters" id="clearFilters" hidden>Clear filters</button>
     </div>
+    <div class="quickviews" aria-label="Quick views">
+      <span class="qv-label">Quick view:</span>
+      <button type="button" class="qv-btn" id="repeatToggle" aria-pressed="false">Pitched more than once<span class="c" id="repeatCount"></span></button>
+    </div>
   </div>
   <div class="legend" aria-label="What the labels on each record mean">
     <div class="legend-row"><span class="badge b-long">Long</span><span class="legend-txt"><strong>Category pill</strong> — the speaker&rsquo;s call: Long, Watchlist, Pass, Closed / exit, or Discussed — no decision. The chips above filter the list by category.</span></div>
@@ -341,10 +389,17 @@
     <div class="legend-row"><span class="flag">Hold</span><span class="flag">New add</span><span class="legend-txt"><strong>Context flag</strong> — extra detail on the record: Hold = already owned, New add = newly bought, Valuation = liked but waiting on price.</span></div>
   </div>
   <div class="show-panel" id="showPanel" hidden></div>
+  <div class="repeat-panel" id="repeatPanel" hidden></div>
   <p class="count-line" id="countLine"></p>
   <div id="list"></div>
   <div class="empty" id="empty" hidden>No cases match that search. Try a ticker (e.g. POOL), a speaker (Melvin), or clear the list filter.</div>
   <nav class="pagination" id="pagination" aria-label="Records pages"></nav>
+</section>
+
+<section id="summary">
+  <h2>Summary by show</h2>
+  <p class="sub">One row per show, ordered by records tracked — most first. This is a summary of what each show&rsquo;s Longs did, not a ranking. Win rates and averages cover Longs with a return only, and the share beating SPY always shows its sample size.</p>
+  <div id="showSummary"></div>
 </section>
 
 <section id="shows">
@@ -603,7 +658,7 @@ var PICKS = [
 ];
 
 var PAGE_SIZE = 5;
-var state = { q:"", show:"", list:[], sortKey:"date", sortDir:"desc", page:1 };
+var state = { q:"", show:"", list:[], sortKey:"date", sortDir:"desc", page:1, repeat:false };
 var listEl = document.getElementById('list');
 var emptyEl = document.getElementById('empty');
 var countEl = document.getElementById('countLine');
@@ -612,6 +667,17 @@ var paginationEl = document.getElementById('pagination');
 var clearFiltersEl = document.getElementById('clearFilters');
 var hasCompletedFirstRender = false;
 
+/* Tickers pitched more than once — counted live from PICKS. Records with
+   no real ticker (the "—" placeholder) never count. */
+var TICKER_COUNTS = {};
+PICKS.forEach(function(p){
+  if(p.ticker && p.ticker !== "\u2014") TICKER_COUNTS[p.ticker] = (TICKER_COUNTS[p.ticker] || 0) + 1;
+});
+var REPEAT_TICKERS = Object.keys(TICKER_COUNTS).filter(function(t){ return TICKER_COUNTS[t] > 1; })
+  .sort(function(a,b){ return (TICKER_COUNTS[b] - TICKER_COUNTS[a]) || a.localeCompare(b); });
+var REPEAT_RECORD_COUNT = REPEAT_TICKERS.reduce(function(sum,t){ return sum + TICKER_COUNTS[t]; }, 0);
+function isRepeatTicker(t){ return !!(t && TICKER_COUNTS[t] > 1); }
+
 function syncChipsUI(){
   var all = document.querySelectorAll('.chip');
   for(var i=0;i<all.length;i++){
@@ -619,7 +685,7 @@ function syncChipsUI(){
     all[i].setAttribute('aria-pressed', lv==="" ? (state.list.length===0 ? 'true':'false') : (state.list.indexOf(lv)!==-1 ? 'true':'false'));
   }
 }
-function hasActiveFilters(){ return !!(state.q || state.show || state.list.length); }
+function hasActiveFilters(){ return !!(state.q || state.show || state.list.length || state.repeat); }
 function updateClearFilters(){
   if(!clearFiltersEl) return;
   var active = hasActiveFilters();
@@ -631,6 +697,7 @@ function syncUrl(){
     if(state.show) params.set('show', state.show);
     if(state.list.length) params.set('status', state.list.join(','));
     if(state.q) params.set('ticker', state.q);
+    if(state.repeat) params.set('repeat', '1');
     var qs = params.toString();
     var newUrl = qs ? ('?' + qs) : window.location.pathname;
     if(window.location.search !== (qs ? ('?' + qs) : '')){
@@ -687,6 +754,8 @@ function applyUrlParams(){
     var qEl = document.getElementById('q');
     if(qEl) qEl.value = state.q;
   }
+  /* ?repeat=1 — the "Pitched more than once" quick view */
+  if(params.get('repeat') === '1' || params.get('view') === 'repeat'){ state.repeat = true; }
   syncChipsUI();
 }
 
@@ -868,10 +937,83 @@ function renderShowPanel(){
   showPanelEl.hidden = false;
 }
 
+function fmtBeatShare(wins, n){
+  if(!n) return "\u2014";
+  var raw = wins * 100 / n;
+  var tenth = Math.round(raw * 10) / 10;
+  var pct;
+  if(Math.abs(raw * 10 - Math.round(raw * 10)) < 1e-9){
+    pct = (tenth % 1 === 0) ? String(Math.round(tenth)) : tenth.toFixed(1);
+  } else {
+    pct = String(Math.round(raw));
+  }
+  return wins + " of " + n + " (" + pct + "%)";
+}
+
+function renderShowSummary(){
+  var el = document.getElementById('showSummary');
+  if(!el) return;
+  var byShow = {};
+  PICKS.forEach(function(p){ (byShow[p.show] = byShow[p.show] || []).push(p); });
+  var shows = Object.keys(byShow).map(function(name){
+    var rows = byShow[name];
+    var longs = rows.filter(function(p){ return stanceOf(p) === "Long"; });
+    var withRet = longs.filter(function(p){
+      return p.ret !== null && p.ret !== undefined && p.excess !== null && p.excess !== undefined;
+    });
+    var wins = 0, sum = 0, best = null;
+    withRet.forEach(function(p){
+      if(p.excess > 0) wins++;
+      sum += p.excess;
+      if(!best || p.excess > best.excess) best = p;
+    });
+    return { name:name, records:rows.length, longs:longs.length, withRet:withRet.length, wins:wins,
+      avg: withRet.length ? sum / withRet.length : null, best:best };
+  });
+  /* Fixed order: most records first — a summary, not a ranking, and
+     never re-sorted by win rate or any other performance measure. */
+  shows.sort(function(a,b){ return (b.records - a.records) || a.name.localeCompare(b.name); });
+  el.innerHTML = '<div class="summary-wrap"><table class="summary" aria-label="Summary by show"><thead><tr>'
+    + '<th scope="col">Show</th><th scope="col" class="r">Records</th><th scope="col" class="r">Longs</th>'
+    + '<th scope="col" class="r">Longs beating SPY</th><th scope="col" class="r">Avg excess vs SPY</th><th scope="col">Best Long</th>'
+    + '</tr></thead><tbody>'
+    + shows.map(function(s){
+        var bestHtml = s.best
+          ? ((s.best.ticker && s.best.ticker !== "\u2014" ? '<span class="best-t">' + s.best.ticker + '</span> ' : '')
+             + '<span class="' + cls(s.best.excess) + '">' + fmtPP(s.best.excess) + '</span>')
+          : '<span class="muted">&mdash;</span>';
+        return '<tr>'
+          + '<td class="summary-show" data-th="Show"><a class="show-link" data-show="' + s.name + '" href="?show=' + encodeURIComponent(s.name) + '">' + s.name + '</a></td>'
+          + '<td class="r" data-th="Records">' + s.records + '</td>'
+          + '<td class="r" data-th="Longs">' + s.longs + '</td>'
+          + '<td class="r" data-th="Longs beating SPY">' + (s.withRet ? fmtBeatShare(s.wins, s.withRet) : '<span class="muted">No Longs with a return</span>') + '</td>'
+          + '<td class="r" data-th="Avg excess vs SPY">' + (s.avg !== null ? '<span class="' + cls(s.avg) + '">' + fmtPP(s.avg) + '</span>' : '<span class="muted">&mdash;</span>') + '</td>'
+          + '<td data-th="Best Long">' + bestHtml + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody></table></div>';
+}
+
+function renderRepeatPanel(){
+  var toggle = document.getElementById('repeatToggle');
+  if(toggle) toggle.setAttribute('aria-pressed', state.repeat ? 'true' : 'false');
+  var toggleCount = document.getElementById('repeatCount');
+  if(toggleCount) toggleCount.textContent = REPEAT_TICKERS.length;
+  var panel = document.getElementById('repeatPanel');
+  if(!panel) return;
+  if(!state.repeat){ panel.hidden = true; panel.innerHTML = ""; return; }
+  panel.innerHTML = '<p class="repeat-count"><strong>' + REPEAT_TICKERS.length + ' tickers</strong> pitched more than once &middot; <strong>' + REPEAT_RECORD_COUNT + ' records</strong> in this view. Pick a ticker to see all of its records:</p>'
+    + '<div class="repeat-list">' + REPEAT_TICKERS.map(function(t){
+        return '<a class="repeat-ticker ticker-link" data-ticker="' + t + '" href="?ticker=' + encodeURIComponent(t) + '">' + t + '<span class="x">&times;' + TICKER_COUNTS[t] + '</span></a>';
+      }).join('') + '</div>';
+  panel.hidden = false;
+}
+
 function render(){
   var rows = PICKS.filter(function(p){
     if(state.list.length && state.list.indexOf(p.list)===-1) return false;
     if(state.show && !showMatches(p, state.show)) return false;
+    if(state.repeat && !isRepeatTicker(p.ticker)) return false;
     if(state.q){
       var hay = (p.ticker+" "+p.company+" "+p.speaker+" "+p.show+" "+p.episode).toLowerCase();
       if(hay.indexOf(state.q.toLowerCase())===-1) return false;
@@ -891,6 +1033,8 @@ function render(){
   renderPagination(total, totalPages);
   syncSortControls();
   renderShowPanel();
+  renderShowSummary();
+  renderRepeatPanel();
   var cardsHtml = pageRows.map(function(p){
     var nums = "";
     if(p.entryDate && p.entryDate!=="—") nums += '<div class="num"><div class="k">Entry · '+p.entryDate+'</div><div class="v">'+(fmtPrice(p.entry,p.cur)||'<span class="muted">to verify</span>')+'</div></div>';
@@ -952,6 +1096,25 @@ function setCounts(){
 
 document.getElementById('q').addEventListener('input', function(e){ state.q = e.target.value.trim(); state.page = 1; render(); });
 document.getElementById('showSel').addEventListener('change', function(e){ state.show = e.target.value; state.page = 1; render(); });
+var repeatToggleEl = document.getElementById('repeatToggle');
+if(repeatToggleEl){
+  repeatToggleEl.addEventListener('click', function(){
+    state.repeat = !state.repeat;
+    state.page = 1;
+    render();
+  });
+}
+document.addEventListener('click', function(e){
+  var link = e.target.closest ? e.target.closest('a.ticker-link') : null;
+  if(!link) return;
+  e.preventDefault();
+  state.q = link.getAttribute('data-ticker') || "";
+  var qEl = document.getElementById('q'); if(qEl) qEl.value = state.q;
+  state.page = 1;
+  render();
+  var picksSection = document.getElementById('picks');
+  if(picksSection) picksSection.scrollIntoView({block:'start'});
+});
 document.addEventListener('click', function(e){
   var link = e.target.closest ? e.target.closest('a.show-link') : null;
   if(!link) return;
@@ -1003,6 +1166,7 @@ if(clearFiltersEl){
     state.q = "";
     state.show = "";
     state.list = [];
+    state.repeat = false;
     state.page = 1;
     var qEl = document.getElementById('q'); if(qEl) qEl.value = "";
     var showEl = document.getElementById('showSel'); if(showEl) showEl.value = "";

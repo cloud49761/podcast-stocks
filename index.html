@@ -306,7 +306,6 @@
         <option>Value After Hours</option>
         <option>The Investor's Podcast</option>
         <option>The Investor's Podcast Mastermind</option>
-        <option>The Acquirers Podcast</option>
         <option>Business Breakdowns</option>
         <option>Value Options</option>
       </select>
@@ -321,7 +320,6 @@
       <a class="show-link" data-show="Value After Hours" href="?show=Value%20After%20Hours">Value After Hours</a><span class="sep" aria-hidden="true">&middot;</span>
       <a class="show-link" data-show="The Investor's Podcast" href="?show=The%20Investor's%20Podcast">The Investor's Podcast</a><span class="sep" aria-hidden="true">&middot;</span>
       <a class="show-link" data-show="The Investor's Podcast Mastermind" href="?show=The%20Investor's%20Podcast%20Mastermind">Mastermind</a><span class="sep" aria-hidden="true">&middot;</span>
-      <a class="show-link" data-show="The Acquirers Podcast" href="?show=The%20Acquirers%20Podcast">The Acquirers Podcast</a><span class="sep" aria-hidden="true">&middot;</span>
       <a class="show-link" data-show="Business Breakdowns" href="?show=Business%20Breakdowns">Business Breakdowns</a><span class="sep" aria-hidden="true">&middot;</span>
       <a class="show-link" data-show="Value Options" href="?show=Value%20Options">Value Options</a>
     </div>
@@ -355,10 +353,10 @@
   <div class="collapse-body">
   <p class="sub">Shows covered, plus one paused source. Value After Hours episodes count once, under Value After Hours.</p>
   <div class="panel">
-    <div class="showrow"><div><div class="nm"><a class="show-link" data-show="The Investor's Podcast" href="?show=The%20Investor's%20Podcast">The Investor's Podcast</a> (formerly We Study Billionaires)</div><div class="dt">26 episodes, Nov 2024 to Nov 2026 · The Intrinsic Value Podcast merged into this feed in April 2026; its portfolio decisions are the ones tracked here.</div></div><div class="ct">60 rows</div></div>
+    <div class="showrow"><div><div class="nm"><a class="show-link" data-show="The Investor's Podcast" href="?show=The%20Investor's%20Podcast">The Investor's Podcast</a> (formerly We Study Billionaires)</div><div class="dt">53 episodes, Nov 2024 to Nov 2026 · The Intrinsic Value Podcast merged into this feed in April 2026; its portfolio decisions are the ones tracked here.</div></div><div class="ct">60 rows</div></div>
     <div class="showrow"><div><div class="nm"><a class="show-link" data-show="The Investor's Podcast Mastermind" href="?show=The%20Investor's%20Podcast%20Mastermind">The Investor's Podcast Mastermind</a></div><div class="dt">Panel episodes of The Investor's Podcast where each speaker pitches their best idea, plus guest-fund holdings. These are the speakers' own picks, not the show's portfolio decisions. 15 panel picks with a return. Inside that section, a row is Long where the speaker picked the stock or holds it.</div></div><div class="ct">18 episodes · 43 rows</div></div>
     <div class="showrow"><div><div class="nm"><a class="show-link" data-show="Value After Hours" href="?show=Value%20After%20Hours">Value After Hours</a></div><div class="dt">23 episodes, Nov 2024 to Nov 2026</div></div></div>
-    <div class="showrow"><div><div class="nm"><a class="show-link" data-show="The Acquirers Podcast" href="?show=The%20Acquirers%20Podcast">The Acquirers Podcast</a> / <a class="show-link" data-show="Value Options" href="?show=Value%20Options">Value Options</a></div><div class="dt">Value Options episodes counted separately from Value After Hours</div></div></div>
+    <div class="showrow"><div><div class="nm"><a class="show-link" data-show="Value Options" href="?show=Value%20Options">Value Options</a></div><div class="dt">Tobias Carlisle's companion show to The Acquirers Podcast; its episodes are counted separately from Value After Hours.</div></div><div class="ct">2 rows</div></div>
     <div class="showrow"><div><div class="nm"><a class="show-link" data-show="Business Breakdowns" href="?show=Business%20Breakdowns">Business Breakdowns</a></div><div class="dt">20 episodes, Nov 2024 to Oct 2026</div></div></div>
     <div class="showrow"><div><div class="nm">Focused Compounding — paused</div><div class="dt">Paused: no new episodes since 29 May 2026 (EP.480).</div></div><div class="ct">Paused</div></div>
   </div>
@@ -646,6 +644,9 @@ function applyUrlParams(){
   if(!params) return;
   /* ?show= — only apply a value that matches a real show option */
   var showParam = params.get('show');
+  /* Legacy links: "The Acquirers Podcast" was a label for the Value Options
+     records; map it so old links still land on those records. */
+  if(showParam === "The Acquirers Podcast") showParam = "Value Options";
   if(showParam){
     var sel = document.getElementById('showSel');
     var showOk = false;
@@ -691,7 +692,7 @@ function applyUrlParams(){
 
 function stanceOf(p){ return p.list==="Mastermind" ? (p.stance==="Long"?"Long":"Review") : p.list; }
 function showMatches(p, show){
-  return p.show===show || (show==="The Acquirers Podcast" && p.show==="Value Options");
+  return p.show===show;
 }
 function badgeClass(p){ var l=stanceOf(p); return l==="Long"?"b-long":l==="Watchlist"?"b-watch":l==="Pass"?"b-pass":l==="Closed"?"b-closed":l==="Review"?"b-review":l==="NoDecision"?"b-nodecision":"b-pass"; }
 function badgeLabel(p){ var l=stanceOf(p); return l==="Review"?"Needs review":l==="Closed"?"Closed / exit":l==="NoDecision"?"Discussed \u2014 no decision":l; }
@@ -861,11 +862,9 @@ function renderShowPanel(){
         }).join('')
       + '</ul></div>';
   }
-  var note = state.show==="The Acquirers Podcast"
-    ? '<p class="show-note">This show&rsquo;s episodes are tracked as Value Options &mdash; this view shows those records.</p>' : '';
   showPanelEl.innerHTML = '<div class="show-panel-head"><h3>' + state.show + '</h3>'
     + '<a class="show-link show-all" data-show="" href="?">All shows</a></div>'
-    + '<p class="show-stats">' + stats + '</p>' + note + topHtml;
+    + '<p class="show-stats">' + stats + '</p>' + topHtml;
   showPanelEl.hidden = false;
 }
 

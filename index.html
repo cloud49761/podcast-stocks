@@ -332,6 +332,44 @@
     *{transition:none !important}
   }
 
+  /* ---------- dedicated view pages (near52 / top20) ---------- */
+  .view-page{margin-top:36px}
+  .view-page[hidden]{display:none !important}
+  .view-back{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;margin-bottom:20px}
+  .view-page-title{font-size:34px;line-height:1.12;margin:0 0 10px;font-weight:800;letter-spacing:-.03em;color:var(--navy)}
+  .view-page-intro{font-size:15.5px;line-height:1.7;color:var(--ink2);max-width:760px;margin:0}
+  .view-list-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);margin-top:18px}
+  .view-list-card .show-top{margin-top:0;padding-top:0;border-top:none}
+  .view-list-card .show-top-h{font-size:13px;color:var(--navy);letter-spacing:.02em;text-transform:none}
+  body.view-active .kpis{display:none}
+  @media (max-width:760px){
+    .view-page{margin-top:24px}
+    .view-page-title{font-size:28px}
+    .view-list-card{padding:16px}
+  }
+
+  /* ---------- bottom navigation (mobile only) ---------- */
+  .bottom-nav{display:none}
+  @media (max-width:760px){
+    html{scroll-padding-bottom:110px}
+    input,select,button,a{scroll-margin-bottom:110px}
+    /* Tighter mobile spacing above the controls, so the search box sits
+       fully above the fixed bottom bar on first load instead of
+       straddling it at the fold. */
+    header{padding-top:20px}
+    .kpis{margin-top:16px;gap:10px}
+    .kpi{padding:14px 16px 12px}
+    section{margin-top:34px}
+    .sub{margin-bottom:14px}
+    .wrap{padding-bottom:118px}
+    .bottom-nav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom, 0px));justify-content:space-around;box-shadow:0 -4px 18px rgba(11,31,58,.08)}
+    .bottom-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:1 1 0;min-width:0;padding:7px 4px 5px;color:var(--ink2);font-size:11px;font-weight:600;line-height:1.2;border-radius:10px;text-align:center}
+    .bottom-nav-item:hover{text-decoration:none;color:var(--ink)}
+    .bottom-nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+    .bottom-nav-item svg{width:22px;height:22px;flex:none}
+    .bottom-nav-item.active,.bottom-nav-item[aria-current="true"]{color:var(--accent)}
+  }
+
 </style>
 </head>
 <body>
@@ -346,6 +384,9 @@
   <div class="kpi"><div class="n">181</div><div class="l">records tracked</div></div>
   <div class="kpi"><div class="n">19 Nov 2026</div><div class="l">prices current to the last completed trading day</div></div>
 </div>
+
+<section class="view-page" id="nearPanel" hidden aria-label="Near 52-week highs and lows"></section>
+<section class="view-page" id="topPanel" hidden aria-label="Top 20 best and worst picks"></section>
 
 <section id="picks">
   <h2>All cases</h2>
@@ -405,8 +446,6 @@
   </div>
   <div class="show-panel" id="showPanel" hidden></div>
   <div class="repeat-panel" id="repeatPanel" hidden></div>
-  <div class="show-panel view-panel" id="nearPanel" hidden></div>
-  <div class="show-panel view-panel" id="topPanel" hidden></div>
   <p class="count-line" id="countLine"></p>
   <div id="list"></div>
   <div class="empty" id="empty" hidden>No cases match that search. Try a ticker (e.g. POOL), a speaker (Melvin), or clear the list filter.</div>
@@ -463,6 +502,21 @@
 </footer>
 
 </div>
+
+<nav class="bottom-nav" aria-label="Pages">
+  <a class="bottom-nav-item view-link" data-view="" href="?" aria-label="Home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
+    <span>Home</span>
+  </a>
+  <a class="bottom-nav-item view-link" data-view="near52" href="?view=near52" aria-label="Near 52-week highs and lows">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-8"/><path d="M22 20H2"/></svg>
+    <span>Near 52W</span>
+  </a>
+  <a class="bottom-nav-item view-link" data-view="top20" href="?view=top20" aria-label="Top 20 best and worst picks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a1 1 0 0 0-1 1c0 2 1.5 3.5 4 3.5"/><path d="M17 6h3a1 1 0 0 1 1 1c0 2-1.5 3.5-4 3.5"/></svg>
+    <span>Top 20</span>
+  </a>
+</nav>
 
 <script>
 var PICKS = [
@@ -1056,6 +1110,33 @@ function renderRepeatPanel(){
   panel.hidden = false;
 }
 
+/* Dedicated view pages: when ?view=near52 or ?view=top20 is active, the
+   view is a full page — the record feed, filter chips, summary, coverage
+   and methodology sections are hidden and only the view page shows. */
+function syncViewChrome(){
+  var isView = state.view === 'near52' || state.view === 'top20';
+  document.body.classList.toggle('view-active', isView);
+  if(isView) document.body.setAttribute('data-view', state.view);
+  else document.body.removeAttribute('data-view');
+  var picksEl = document.getElementById('picks');
+  if(picksEl) picksEl.hidden = isView;
+  var summaryEl = document.getElementById('summary');
+  if(summaryEl) summaryEl.hidden = isView;
+  var showsEl = document.getElementById('shows');
+  if(showsEl) showsEl.hidden = isView;
+  var methodEl = document.getElementById('method');
+  if(methodEl) methodEl.hidden = isView;
+  var links = document.querySelectorAll('.view-link');
+  for(var i=0;i<links.length;i++){
+    var dv = links[i].getAttribute('data-view') || "";
+    if(dv === state.view) links[i].setAttribute('aria-current','true');
+    else links[i].removeAttribute('aria-current');
+    if(links[i].classList.contains('bottom-nav-item')){
+      links[i].classList.toggle('active', dv === state.view);
+    }
+  }
+}
+
 /* Near 52-week high / low — computed live from each record's last close
    and its stored 52-week high/low, one entry per stock (records that share
    a ticker share the same prices). Near high: last close within 5% below
@@ -1063,11 +1144,7 @@ function renderRepeatPanel(){
 function renderNearPanel(){
   var panel = document.getElementById('nearPanel');
   if(!panel) return;
-  var links = document.querySelectorAll('.view-link');
-  for(var i=0;i<links.length;i++){
-    if(links[i].getAttribute('data-view')===state.view && state.view) links[i].setAttribute('aria-current','true');
-    else links[i].removeAttribute('aria-current');
-  }
+  syncViewChrome();
   if(state.view !== 'near52'){ panel.hidden = true; panel.innerHTML = ""; return; }
   var byTicker = {};
   PICKS.forEach(function(p){
@@ -1092,16 +1169,17 @@ function renderNearPanel(){
       + '<span class="co">' + p.company + '</span>'
       + '<span class="dist">' + dist + '</span></li>';
   }
-  panel.innerHTML = '<div class="show-panel-head"><h3>Near 52-week highs &amp; lows</h3>'
-    + '<a class="view-link show-all" data-view="" href="?">Close</a></div>'
-    + '<p class="show-stats">Stocks whose last close is within 5% of their 52-week high or low &middot; prices as of 19 Nov 2026</p>'
-    + '<div class="show-top"><div class="show-top-h">Near 52-week high &mdash; ' + nearHigh.length + (nearHigh.length===1 ? ' stock' : ' stocks') + '</div><ul>'
+  panel.innerHTML = '<a class="view-link view-back" data-view="" href="?">&larr; Back to Home</a>'
+    + '<h2 class="view-page-title">Near 52-week highs &amp; lows</h2>'
+    + '<p class="view-page-intro">Stocks from the tracker whose latest close is within 5% of their 52-week high or low — which pitched stocks are trading near the top or the bottom of their past year&rsquo;s range. Prices as of 19 Nov 2026. Tap a ticker to see its record.</p>'
+    + '<div class="view-list-card"><div class="show-top"><div class="show-top-h">Near 52-week high &mdash; ' + nearHigh.length + (nearHigh.length===1 ? ' stock' : ' stocks') + '</div><ul>'
     + (nearHigh.length ? nearHigh.map(function(e){ return item(e,'high'); }).join('') : '<li><span class="dist">None right now.</span></li>')
-    + '</ul></div>'
-    + '<div class="show-top"><div class="show-top-h">Near 52-week low &mdash; ' + nearLow.length + (nearLow.length===1 ? ' stock' : ' stocks') + '</div><ul>'
+    + '</ul></div></div>'
+    + '<div class="view-list-card"><div class="show-top"><div class="show-top-h">Near 52-week low &mdash; ' + nearLow.length + (nearLow.length===1 ? ' stock' : ' stocks') + '</div><ul>'
     + (nearLow.length ? nearLow.map(function(e){ return item(e,'low'); }).join('') : '<li><span class="dist">None right now.</span></li>')
-    + '</ul></div>';
+    + '</ul></div></div>';
   panel.hidden = false;
+  syncViewChrome();
 }
 
 /* Top 20 best / worst — Long picks only, ranked live by excess vs SPY. */
@@ -1122,16 +1200,17 @@ function renderTopPanel(){
       + '<span class="x ' + cls(p.excess) + '">' + fmtPP(p.excess) + ' vs SPY</span>'
       + '<span class="dist">' + p.epDate + '</span></li>';
   }
-  panel.innerHTML = '<div class="show-panel-head"><h3>Top 20 best &amp; worst picks</h3>'
-    + '<a class="view-link show-all" data-view="" href="?">Close</a></div>'
-    + '<p class="show-stats">Long picks only, ranked by return vs the S&amp;P 500 since the episode &middot; as of 19 Nov 2026</p>'
-    + '<div class="show-top"><div class="show-top-h">Top 20 best performing picks</div><ul>'
+  panel.innerHTML = '<a class="view-link view-back" data-view="" href="?">&larr; Back to Home</a>'
+    + '<h2 class="view-page-title">Top 20 best &amp; worst picks</h2>'
+    + '<p class="view-page-intro">The Long picks that have beaten the S&amp;P 500 by the most — and the ones that have lagged it by the most — ranked by excess return vs SPY since each episode aired. Long picks only, as of 19 Nov 2026. Tap a ticker to see its record.</p>'
+    + '<div class="view-list-card"><div class="show-top"><div class="show-top-h">Top 20 best performing picks</div><ul>'
     + best.map(item).join('')
-    + '</ul></div>'
-    + '<div class="show-top"><div class="show-top-h">Top 20 worst performing picks</div><ul>'
+    + '</ul></div></div>'
+    + '<div class="view-list-card"><div class="show-top"><div class="show-top-h">Top 20 worst performing picks</div><ul>'
     + worst.map(item).join('')
-    + '</ul></div>';
+    + '</ul></div></div>';
   panel.hidden = false;
+  syncViewChrome();
 }
 
 function render(){
@@ -1237,6 +1316,7 @@ document.addEventListener('click', function(e){
   if(!link) return;
   e.preventDefault();
   state.q = link.getAttribute('data-ticker') || "";
+  state.view = "";
   var qEl = document.getElementById('q'); if(qEl) qEl.value = state.q;
   state.page = 1;
   render();
@@ -1250,8 +1330,11 @@ document.addEventListener('click', function(e){
   state.view = link.getAttribute('data-view') || "";
   state.page = 1;
   render();
-  var picksSection = document.getElementById('picks');
-  if(picksSection) picksSection.scrollIntoView({block:'start'});
+  var target = state.view === 'near52' ? document.getElementById('nearPanel')
+    : state.view === 'top20' ? document.getElementById('topPanel')
+    : document.getElementById('picks');
+  if(target) target.scrollIntoView({block:'start'});
+  else window.scrollTo(0,0);
 });
 document.addEventListener('click', function(e){
   var link = e.target.closest ? e.target.closest('a.show-link') : null;

@@ -503,19 +503,44 @@ def main():
             new_last = r2(new_last)
 
         # --- cross-check against the stored `last` -----------------------
-        if as_of_last is None:
-            errors.append("%s: no close on or before as-of %s"
-                          % (ticker, as_of_str))
-            new_texts.append(obj)
-            continue
+        # The stored `last` must be a real recent close for this ticker.
+        # It is normally the close on the as-of date, but a ticker whose
+        # source was unavailable on a previous run (e.g. a Yahoo ticker
+        # left behind by a 429) can legitimately be a few closes behind,
+        # so for non-MSGS tickers accept any close within MAX_STALE_DAYS
+        # before the as-of date. MSGS is priced from StockAnalysis and is
+        # always current, so it keeps the strict check.
         tol = max(TOL_ABS, TOL_REL * abs(f["last"]))
-        if abs(as_of_last - f["last"]) > tol:
-            errors.append(
-                "%s: cross-check failed — stored last %.2f but close "
-                "on %s is %.2f"
-                % (ticker, f["last"], as_of_d, as_of_last))
-            new_texts.append(obj)
-            continue
+        if ticker == "MSGS":
+            if as_of_last is None or abs(as_of_last - f["last"]) > tol:
+                errors.append(
+                    "%s: cross-check failed — stored last %.2f but close "
+                    "on %s is %.2f"
+                    % (ticker, f["last"], as_of_d, as_of_last))
+                new_texts.append(obj)
+                continue
+        else:
+            if as_of_last is None:
+                errors.append("%s: no close on or before as-of %s"
+                              % (ticker, as_of_str))
+                new_texts.append(obj)
+                continue
+            recent = sorted(
+                ((dd, r2(cc)) for dd, cc in series.items()
+                 if dd <= as_of and (as_of - dd).days <= MAX_STALE_DAYS),
+                reverse=True)
+            matched = None
+            for cd, cc in recent:
+                if abs(cc - f["last"]) <= tol:
+                    matched = cd
+                    break
+            if matched is None:
+                errors.append(
+                    "%s: cross-check failed — stored last %.2f matches no "
+                    "close within %d days before %s"
+                    % (ticker, f["last"], MAX_STALE_DAYS, as_of_str))
+                new_texts.append(obj)
+                continue
 
         # --- new close ----------------------------------------------------
         if new_last is None or stale is None or stale > MAX_STALE_DAYS:

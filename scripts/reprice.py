@@ -2,8 +2,9 @@
 """Daily re-price for the podcast stock tracker.
 
 Reads index.html (the live site file), re-prices every priced record to the
-latest completed trading day, recomputes ret / spy / excess vs SPY, updates
-the date strings, and writes index.html back.
+latest completed trading day, recomputes ret / spy / excess vs SPY, refreshes
+each record's 52-week high and low to the same date, updates the date
+strings, and writes index.html back.
 
 Method (matches the manual re-prices to date):
   * Prices come from the StockAnalysis API (daily closes, unadjusted) for
@@ -11,6 +12,12 @@ Method (matches the manual re-prices to date):
     only for the tickers StockAnalysis does not cover (foreign listings,
     plus the US-listed NTDOY and OTCM) — Yahoo rate-limits GitHub's
     shared runner IPs, so it must never be the primary source.
+  * History is fetched with range=1y (not 3mo) so the 52-week high/low
+    can be recomputed from the same series: the high/low is the max/min
+    close over the 365 calendar days ending on the record's latest close.
+    The 52-week values are refreshed on every run, so a price can never
+    sit below a stale recorded low again (the 20 Nov 2026 selloff exposed
+    this: the lows were frozen at 19 Nov while prices had moved to 20 Nov).
   * Entry prices, classifications and entry dates NEVER change.
   * ret  = (last / entry - 1) * 100
   * The file stores no SPY entry price per record, so the SPY entry close is
@@ -64,8 +71,8 @@ from decimal import ROUND_HALF_UP, Decimal
 # ---------------------------------------------------------------- constants
 
 STOCKANALYSIS_HISTORY = ("https://api.stockanalysis.com/api/symbol/s/{sym}"
-                         "/history?range=3mo&period=Daily")
-YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=3mo&interval=1d"
+                         "/history?range=1y&period=Daily")
+YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=1y&interval=1d"
 USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
@@ -304,10 +311,57 @@ def record_fields(obj):
     head, _ = split_head(obj)
     tick_m = re.search(r'ticker:"((?:[^"\\]|\\.)*)"', head)
     out = {"ticker": tick_m.group(1) if tick_m else None}
-    for name in ("entry", "last", "ret", "spy", "excess"):
+    for name in ("entry", "last", "ret", "spy", "excess", "h52", "l52"):
         m = re.search(NUM_FIELD % name, head)
         out[name] = float(m.group(1)) if m else None
+    # Whether the h52/l52 fields exist at all (a record added without
+    # them, e.g. the Value Options Adobe row, has neither field).
+    out["has_52w"] = (",h52:" in head and ",l52:" in head)
     return out
+
+
+def window_high_low(series, end_date):
+    """52-week high/low from a {date: close} series: the max/min close
+    over the 365 calendar days ending on `end_date`. Returns
+    (high, low) rounded to 2dp, or (None, None) if the series has no
+    close in the window."""
+    closes = [c for d, c in series.items()
+              if d <= end_date and (end_date - d).days <= 365]
+    if not closes:
+        return None, None
+    return r2(max(closes)), r2(min(closes))
+
+
+def set_52w(obj, h52, l52):
+    """Set a record's h52/l52. Replaces the numeric fields when they
+    exist (or a null placeholder), and when the record has no h52/l52
+    fields at all inserts them just before `,list:` (which keeps the
+    field order ..., strip?, h52, l52, list, ...)."""
+    head, tail = split_head(obj)
+    new_head = head
+    for name, value in (("h52", h52), ("l52", l52)):
+        new_head, n = re.subn(NUM_FIELD % name, ",%s:%.2f" % (name, value),
+                              new_head, count=1)
+        if n != 1:
+            # Field exists but is null (",h52:null").
+            new_head, n = re.subn(r",%s:null" % name,
+                                  ",%s:%.2f" % (name, value),
+                                  new_head, count=1)
+        if n != 1:
+            # Field absent entirely: insert before ,list:. Inserting h52
+            # first and l52 second lands them in order (h52, l52, list).
+            m = re.search(r",list:", new_head)
+            if not m:
+                raise RuntimeError("could not find ,list: to insert %s in %s"
+                                   % (name, obj[:120]))
+            new_head = (new_head[:m.start()] + ",%s:%.2f" % (name, value)
+                        + new_head[m.start():])
+    new_obj = new_head + tail
+    check = record_fields(new_obj)
+    if check["h52"] != h52 or check["l52"] != l52:
+        raise RuntimeError("h52/l52 did not update as expected in %s"
+                           % obj[:80])
+    return new_obj
 
 
 def replace_fields(obj, values):
@@ -373,9 +427,11 @@ def main():
     target_str = fmt_date(target)
     print("SPY as-of close %s: %.2f ; latest close %s: %.2f"
           % (as_of_str, as_of_spy, target_str, target_spy))
-    if target == as_of:
-        print("already current to %s; nothing to do." % target_str)
-        return 0
+    # No early exit when target == as_of: the prices may already be
+    # current, but the 52-week high/low can still be stale (they were
+    # frozen at 19 Nov 2026 while prices moved to 20 Nov), so the loop
+    # always runs to refresh them. The loop is idempotent — when nothing
+    # changed, new_html == html and nothing is written.
 
     # --- parse the PICKS array -------------------------------------------
     m = re.search(r"var PICKS = \[(.*?)\n\];", html, re.S)
@@ -388,6 +444,7 @@ def main():
     errors = []
     warnings = []
     repriced = 0
+    refreshed_52w = 0
     skipped_no_price = 0
     skipped_held = 0
     skipped_foreign = 0
@@ -567,6 +624,34 @@ def main():
             errors.append("%s: %s" % (ticker, exc))
             new_texts.append(obj)
             continue
+
+        # --- refresh the 52-week high/low ---------------------------------
+        # Window ends on the date of the new close (tgt_d), so the high/low
+        # is always as-of the same date as the price. For MSGS the series
+        # is the combined MSGK + 0.5 x MSGR close.
+        if ticker == "MSGS":
+            hl_series = {}
+            for d in sorted(msgk):
+                if d > tgt_d:
+                    continue
+                _d2, c2 = close_on_or_before(msgr, d)
+                if _d2 is None:
+                    continue
+                hl_series[d] = r2(msgk[d] + 0.5 * c2)
+        else:
+            hl_series = series
+        h52, l52 = window_high_low(hl_series, tgt_d)
+        if h52 is not None and l52 is not None:
+            try:
+                obj = set_52w(obj, h52, l52)
+                refreshed_52w += 1
+            except RuntimeError as exc:
+                errors.append("%s: %s" % (ticker, exc))
+                new_texts.append(obj)
+                continue
+        else:
+            warnings.append("%s: no 52-week history in window ending %s — "
+                            "leaving h52/l52 unchanged" % (ticker, tgt_d))
         new_texts.append(obj)
         repriced += 1
 
@@ -628,9 +713,9 @@ def main():
     with open(index_path, "w", encoding="utf-8") as fh:
         fh.write(new_html)
 
-    print("re-priced %d records to %s (SPY %.2f); skipped %d no-price, %d held, %d Yahoo-unavailable"
-          % (repriced, target_str, target_spy, skipped_no_price, skipped_held,
-             skipped_foreign))
+    print("re-priced %d records to %s (SPY %.2f); refreshed 52-week high/low on %d; skipped %d no-price, %d held, %d Yahoo-unavailable"
+          % (repriced, target_str, target_spy, refreshed_52w,
+             skipped_no_price, skipped_held, skipped_foreign))
     for w in warnings:
         print("  warning: " + w)
     gh_out = os.environ.get("GITHUB_OUTPUT")

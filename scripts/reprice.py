@@ -584,7 +584,7 @@ def main():
                 continue
             recent = sorted(
                 ((dd, r2(cc)) for dd, cc in series.items()
-                 if dd <= as_of and (as_of - dd).days <= MAX_STALE_DAYS),
+                 if dd <= target and abs((as_of - dd).days) <= MAX_STALE_DAYS),
                 reverse=True)
             matched = None
             for cd, cc in recent:
@@ -611,7 +611,17 @@ def main():
 
         # --- recompute returns --------------------------------------------
         unrounded_ret = (new_last / f["entry"] - 1.0) * 100.0
-        spy_entry = as_of_spy / (1.0 + f["spy"] / 100.0)
+        # SPY base is the close on the date the stored `last` was
+        # priced to (matched), not necessarily the file as-of date:
+        # a row added ahead of the file (SPGI, entry 23 Nov, file
+        # as-of 20 Nov) has its spy return measured from its own
+        # priced-to date.
+        if ticker == "MSGS":
+            _spy_base = as_of_spy
+        else:
+            _bd, _bs = close_on_or_before(spy_series, matched)
+            _spy_base = r2(_bs)
+        spy_entry = _spy_base / (1.0 + f["spy"] / 100.0)
         unrounded_spy = (target_spy / spy_entry - 1.0) * 100.0
         try:
             obj = replace_fields(obj, {

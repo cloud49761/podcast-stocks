@@ -13,6 +13,14 @@ Method (matches the manual re-prices to date):
     only for the tickers StockAnalysis does not cover (foreign listings,
     plus the US-listed NTDOY and OTCM) — Yahoo rate-limits GitHub's
     shared runner IPs, so it must never be the primary source.
+  * Total-return rows (records carrying `"totalReturn": true`, currently
+    the Melvin preferreds): their return is computed from ADJUSTED
+    closes (StockAnalysis "a" / Yahoo adjclose), which fold in
+    distributions, so a dividend does not read as a price drop. SPY
+    stays price-based for every row, and the 52-week high/low stays
+    price-based (unadjusted closes). If adjusted closes are unavailable
+    for a total-return row, that row is left completely unchanged and a
+    warning is logged — it is never repriced on price alone.
   * History is fetched with range=1y (not 3mo) so the 52-week high/low
     can be recomputed from the same series: the high/low is the max/min
     close over the 365 calendar days ending on the record's latest close.
@@ -20,7 +28,8 @@ Method (matches the manual re-prices to date):
     sit below a stale recorded low again (the 20 Nov 2026 selloff exposed
     this: the lows were frozen at 19 Nov while prices had moved to 20 Nov).
   * Entry prices, classifications and entry dates NEVER change.
-  * ret  = (last / entry - 1) * 100
+  * ret  = (last / entry - 1) * 100, except total-return rows, where
+    ret = (adjusted last / adjusted entry - 1) * 100.
   * The file stores no SPY entry price per record, so the SPY entry close is
     recovered from the stored spy return and the SPY close on the file's
     current as-of date:  spy_entry = as_of_spy_close / (1 + stored_spy/100).
@@ -57,8 +66,8 @@ Method (matches the manual re-prices to date):
   * WBD is held at $30.95 (ceased trading after the 5 Oct 2026 close; no
     later close exists) and is never re-priced.
   * MSGS is tracked as a combined holding: 1 MSGK + 0.5 x MSGR.
-  * Records with no `last` value (no ticker, exits with no prices, the
-    Melvin preferreds, GMWKF, EVO x2, LMN) are left unchanged.
+  * Records with no `last` value (no ticker, exits with no prices,
+    GMWKF, EVO x2, LMN) are left unchanged.
   * Idempotent: a second run for the same close changes nothing and exits 0
     with "already current". If the latest SPY close is the as-of date (e.g.
     a market holiday, or Yahoo has not published the close yet) nothing is
@@ -107,6 +116,8 @@ SPY_SYMBOL = "SPY"
 # against the StockAnalysis API: 109 of 128 matched, and these 17 did
 # not. 15 are foreign listings; NTDOY (Nintendo ADR) and OTCM (OTC
 # Markets Group) are US-listed but StockAnalysis has no data for them.
+# FCNCN and MBINL (Melvin preferreds) were added 26 Nov 2026:
+# StockAnalysis returns 400 for both, Yahoo covers them.
 # Yahoo failures for these tickers are tolerated (see series_for).
 YAHOO_TICKERS = {
     "121440.KQ",  # Korea (KOSDAQ)
@@ -115,11 +126,13 @@ YAHOO_TICKERS = {
     "EQT.ST",     # EQT, Stockholm
     "EXO",        # Exor (TIP836 row); plain "EXO" returns no Yahoo data
     "EXO.AS",     # Exor, Amsterdam
+    "FCNCN",      # First Citizens Series E preferred (Melvin)
     "FOUR.L",     # 4imprint, London
     "HWDN",       # Howden Joinery, London
     "INF.L",      # Informa, London
     "ITX.MC",     # Inditex, Madrid
     "KER.PA",     # Kering, Paris
+    "MBINL",      # Merchants Bancorp Series E preferred (Melvin)
     "MC.PA",      # LVMH, Paris
     "NTDOY",      # Nintendo ADR (US-listed, no StockAnalysis data)
     "OTCM",       # OTC Markets Group (US-listed, no StockAnalysis data)
@@ -176,11 +189,12 @@ class SymbolNotCovered(RuntimeError):
     """StockAnalysis has no data for this symbol (HTTP 400/404)."""
 
 
-def fetch_stockanalysis(symbol, attempts=5):
-    """Daily closes from the StockAnalysis API -> {date: close}. Uses the
-    "c" (unadjusted close) field; "a" is the adjusted close and is NOT
-    used. Retries with exponential backoff on HTTP 429 / 5xx / network
-    errors. A 400/404 means the symbol is not covered, so it raises
+def fetch_stockanalysis(symbol, field="c", attempts=5):
+    """Daily closes from the StockAnalysis API -> {date: value}. `field`
+    is "c" (unadjusted close, the default) or "a" (adjusted close, which
+    folds in distributions — used only for total-return rows). Retries
+    with exponential backoff on HTTP 429 / 5xx / network errors. A
+    400/404 means the symbol is not covered, so it raises
     SymbolNotCovered (the caller falls back to Yahoo)."""
     url = STOCKANALYSIS_HISTORY.format(sym=symbol)
     last_err = None
@@ -198,13 +212,13 @@ def fetch_stockanalysis(symbol, attempts=5):
                                    % (symbol, data.get("status")))
             series = {}
             for row in data["data"]:
-                if row.get("c") is None or not row.get("t"):
+                if row.get(field) is None or not row.get("t"):
                     continue
                 d = datetime.strptime(row["t"], "%Y-%m-%d").date()
-                series[d] = float(row["c"])
+                series[d] = float(row[field])
             if not series:
                 raise SymbolNotCovered(
-                    "StockAnalysis returned no closes for %s" % symbol)
+                    "StockAnalysis returned no %s values for %s" % (field, symbol))
             return series
         except urllib.error.HTTPError as exc:
             # 400/404 is "not covered", not transient: do not retry.
@@ -226,10 +240,13 @@ def fetch_stockanalysis(symbol, attempts=5):
                        % (symbol, attempts, last_err))
 
 
-def fetch_chart(symbol, attempts=5, rng="1y"):
-    """Daily closes from Yahoo chart API -> {date: close}. Retries with
-    exponential backoff on HTTP 429 / 5xx / network errors. `rng` is
-    the Yahoo range ("1y" for the re-price, "5y" for strip history)."""
+def fetch_chart(symbol, field="close", attempts=5, rng="1y"):
+    """Daily closes from Yahoo chart API -> {date: value}. `field` is
+    "close" (unadjusted close, the default) or "adjclose" (adjusted
+    close, which folds in distributions — used only for total-return
+    rows). Retries with exponential backoff on HTTP 429 / 5xx / network
+    errors. `rng` is the Yahoo range ("1y" for the re-price, "5y" for
+    strip history)."""
     url = (YAHOO_CHART_5Y if rng == "5y" else YAHOO_CHART).format(sym=symbol)
     last_err = None
     for attempt in range(attempts):
@@ -243,16 +260,20 @@ def fetch_chart(symbol, attempts=5, rng="1y"):
                 raise ValueError("Yahoo returned no data for %s: %s" % (symbol, err))
             res = result[0]
             stamps = res.get("timestamp") or []
-            closes = (res.get("indicators", {}).get("quote", [{}])[0]
-                      .get("close") or [])
+            if field == "adjclose":
+                values = (res.get("indicators", {}).get("adjclose", [{}])[0]
+                          .get("adjclose") or [])
+            else:
+                values = (res.get("indicators", {}).get("quote", [{}])[0]
+                          .get("close") or [])
             series = {}
-            for ts, close in zip(stamps, closes):
-                if close is None:
+            for ts, value in zip(stamps, values):
+                if value is None:
                     continue
                 d = datetime.fromtimestamp(ts, timezone.utc).date()
-                series[d] = float(close)
+                series[d] = float(value)
             if not series:
-                raise ValueError("Yahoo returned no closes for %s" % symbol)
+                raise ValueError("Yahoo returned no %s values for %s" % (field, symbol))
             return series
         except urllib.error.HTTPError as exc:
             # 4xx is a data error, not transient: fail fast.
@@ -341,6 +362,12 @@ def record_fields(obj):
     # Whether the h52/l52 fields exist at all (a record added without
     # them, e.g. the Value Options Adobe row, has neither field).
     out["has_52w"] = (",h52:" in head and ",l52:" in head)
+    # Total-return rows (Melvin preferreds) carry totalReturn:true and
+    # are repriced from adjusted closes, not unadjusted closes. The
+    # field sits AFTER ,quote: (at the end of the record), so it must
+    # be searched in the whole object, not just the head — the
+    # ",totalReturn:true" token cannot occur inside a quote or note.
+    out["totalReturn"] = (",totalReturn:true" in obj)
     return out
 
 
@@ -606,6 +633,56 @@ def main():
                                 "failed (%s) — leaving unchanged" % (ticker, exc))
                 return None
 
+    sa_adj_cache = {}
+    yh_adj_cache = {}
+    yh5_adj_cache = {}
+
+    def get_sa_adj_series(symbol):
+        if symbol not in sa_adj_cache:
+            sa_adj_cache[symbol] = fetch_stockanalysis(symbol, field="a")
+            time.sleep(0.15)  # be polite between requests
+        return sa_adj_cache[symbol]
+
+    def get_yahoo_adj_series(symbol):
+        if symbol not in yh_adj_cache:
+            yh_adj_cache[symbol] = fetch_chart(symbol, field="adjclose")
+            time.sleep(0.15)  # be polite to Yahoo between symbols
+        return yh_adj_cache[symbol]
+
+    def get_yahoo_5y_adj(symbol):
+        """Yahoo 5y adjusted closes for strip history (cached)."""
+        if symbol not in yh5_adj_cache:
+            yh5_adj_cache[symbol] = fetch_chart(symbol, field="adjclose", rng="5y")
+            time.sleep(0.15)  # be polite to Yahoo between symbols
+        return yh5_adj_cache[symbol]
+
+    def series_for_adj(ticker):
+        """Adjusted closes for one file ticker -> {date: adj close}, or
+        None. Same source routing as series_for (StockAnalysis primary,
+        Yahoo for YAHOO_TICKERS or when StockAnalysis says not covered).
+        A failure only skips the record (with a warning) — it never
+        fails the run, and a total-return row is never repriced on
+        price alone."""
+        if ticker in YAHOO_TICKERS:
+            sym = YAHOO_SYMBOL_MAP.get(ticker, ticker)
+            try:
+                return get_yahoo_adj_series(sym)
+            except RuntimeError as exc:
+                warnings.append("%s: Yahoo adjusted-close fetch failed (%s) — "
+                                "leaving unchanged" % (ticker, exc))
+                return None
+        try:
+            return get_sa_adj_series(ticker)
+        except SymbolNotCovered:
+            sym = YAHOO_SYMBOL_MAP.get(ticker, ticker)
+            try:
+                return get_yahoo_adj_series(sym)
+            except RuntimeError as exc:
+                warnings.append("%s: not covered by StockAnalysis and Yahoo "
+                                "adjusted-close fetch failed (%s) — leaving "
+                                "unchanged" % (ticker, exc))
+                return None
+
     for (_s, _e, obj) in spans:
         f = record_fields(obj)
         ticker = f["ticker"]
@@ -724,7 +801,47 @@ def main():
                             % (ticker, tgt_d, stale, target_str))
 
         # --- recompute returns --------------------------------------------
-        unrounded_ret = (new_last / f["entry"] - 1.0) * 100.0
+        # Total-return rows (totalReturn:true) compute ret from ADJUSTED
+        # closes, which fold in distributions; every other row uses the
+        # unadjusted closes. SPY is price-based for all rows. If the
+        # adjusted closes are unavailable, the row is left completely
+        # unchanged (never repriced on price alone).
+        a_entry = None
+        adj_series = None
+        if f["totalReturn"]:
+            _em = re.search(r'entryDate:"([^"]+)"', obj)
+            if not _em:
+                warnings.append("%s: total-return row with no entryDate — "
+                                "leaving unchanged" % ticker)
+                new_texts.append(obj)
+                continue
+            _entry_date = parse_file_date(_em.group(1))
+            try:
+                adj_series = series_for_adj(ticker)
+            except RuntimeError as exc:
+                errors.append("%s: %s" % (ticker, exc))
+                new_texts.append(obj)
+                continue
+            if adj_series is None:
+                # series_for_adj already logged the warning.
+                skipped_foreign += 1
+                new_texts.append(obj)
+                continue
+            _ad, a_entry = close_on_or_before(adj_series, _entry_date)
+            if a_entry is None:
+                errors.append("%s: no adjusted close on or before entry %s"
+                              % (ticker, _entry_date))
+                new_texts.append(obj)
+                continue
+            _td, a_last = close_on_or_before(adj_series, target)
+            if a_last is None:
+                errors.append("%s: no adjusted close near target %s"
+                              % (ticker, target_str))
+                new_texts.append(obj)
+                continue
+            unrounded_ret = (a_last / a_entry - 1.0) * 100.0
+        else:
+            unrounded_ret = (new_last / f["entry"] - 1.0) * 100.0
         # SPY base is the close on the date the stored `last` was
         # priced to (matched), not necessarily the file as-of date:
         # a row added ahead of the file (SPGI, entry 23 Nov, file
@@ -813,7 +930,20 @@ def main():
                             warnings.append("%s: strip history unavailable "
                                             "(%s) — strip unchanged" % (ticker, exc))
                 else:
-                    if series and min(series) <= _entry_date:
+                    # Total-return rows use adjusted closes for the strip
+                    # too (the 1y adjusted series when it covers the
+                    # entry date, else Yahoo 5y adjusted closes).
+                    if f["totalReturn"]:
+                        if adj_series and min(adj_series) <= _entry_date:
+                            _strip_series = adj_series
+                        else:
+                            _sym = YAHOO_SYMBOL_MAP.get(ticker, ticker)
+                            try:
+                                _strip_series = get_yahoo_5y_adj(_sym)
+                            except RuntimeError as exc:
+                                warnings.append("%s: strip history unavailable "
+                                                "(%s) — strip unchanged" % (ticker, exc))
+                    elif series and min(series) <= _entry_date:
                         _strip_series = series
                     else:
                         _sym = YAHOO_SYMBOL_MAP.get(ticker, ticker)
@@ -840,7 +970,8 @@ def main():
                         if _tc is None or _sc is None:
                             _new[_name] = _stored
                             continue
-                        _uret = (_tc / f["entry"] - 1.0) * 100.0
+                        _uret = (_tc / (a_entry if f["totalReturn"] else f["entry"])
+                                 - 1.0) * 100.0
                         _uspy = (_sc / spy_entry - 1.0) * 100.0
                         _val = r2(_uret - _uspy)
                         if _stored is not None:

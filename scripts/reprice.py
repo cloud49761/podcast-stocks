@@ -3,8 +3,9 @@
 
 Reads index.html (the live site file), re-prices every priced record to the
 latest completed trading day, recomputes ret / spy / excess vs SPY, refreshes
-each record's 52-week high and low to the same date, updates the date
-strings, and writes index.html back.
+each record's 52-week high and low to the same date, maintains each
+Long's return strip (1W/1M/3M/6M/1Y excess vs SPY forward from the
+entry date), updates the date strings, and writes index.html back.
 
 Method (matches the manual re-prices to date):
   * Prices come from the StockAnalysis API (daily closes, unadjusted) for
@@ -29,6 +30,26 @@ Method (matches the manual re-prices to date):
   * excess = unrounded ret minus unrounded spy; all values rounded to 2dp
     (Decimal, round-half-up). Foreign rows are priced in their listing
     currency, FX-unadjusted vs USD SPY.
+  * Return strip: each Long carries strip:{w1,m1,m3,m6,y1} = excess vs SPY
+    for the 1-week, 1-month, 3-month, 6-month and 1-year windows FORWARD
+    from the entry date. The exit for a window is the entry date plus the
+    calendar offset (7 days, 1, 3, 6, 12 months); the ticker and SPY
+    closes are the most recent on or before that exit date (so a US
+    holiday exit uses the prior close for SPY). A window is null until
+    its exit date is on or before the run's target date. A window that
+    already has a stored (non-null) value is never overwritten: once a
+    window has elapsed its value is a historical fact, and the original
+    19 Nov 2026 computation is not exactly reproducible for every ticker
+    (foreign rows' stored SPY returns do not match the actual SPY close
+    on their entry dates), so preserving them keeps the displayed values
+    stable. Only newly-elapsed windows (stored null, exit now reached)
+    are filled in. Strip history comes from Yahoo chart data (range=5y),
+    because StockAnalysis caps at 1y and cannot reach Nov 2024 entries;
+    the 1y series already fetched for the re-price is reused when it
+    covers the entry date. SPY history for the strip is StockAnalysis
+    1y merged with Yahoo 5y (StockAnalysis wins where both exist).
+    A Yahoo failure for a ticker's strip history never fails the run:
+    that record's strip is left unchanged and a warning is logged.
   * Cross-check: every ticker's close on the as-of date (or latest close on
     or before it) must match the file's stored `last` value. Any mismatch
     means a wrong symbol or bad data, so the run fails loudly and writes
@@ -58,6 +79,7 @@ Usage:
 """
 
 import argparse
+import calendar
 import json
 import os
 import re
@@ -73,6 +95,7 @@ from decimal import ROUND_HALF_UP, Decimal
 STOCKANALYSIS_HISTORY = ("https://api.stockanalysis.com/api/symbol/s/{sym}"
                          "/history?range=1y&period=Daily")
 YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=1y&interval=1d"
+YAHOO_CHART_5Y = "https://query1.finance.yahoo.com/v8/finance/chart/{sym}?range=5y&interval=1d"
 USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"
@@ -203,10 +226,11 @@ def fetch_stockanalysis(symbol, attempts=5):
                        % (symbol, attempts, last_err))
 
 
-def fetch_chart(symbol, attempts=5):
+def fetch_chart(symbol, attempts=5, rng="1y"):
     """Daily closes from Yahoo chart API -> {date: close}. Retries with
-    exponential backoff on HTTP 429 / 5xx / network errors."""
-    url = YAHOO_CHART.format(sym=symbol)
+    exponential backoff on HTTP 429 / 5xx / network errors. `rng` is
+    the Yahoo range ("1y" for the re-price, "5y" for strip history)."""
+    url = (YAHOO_CHART_5Y if rng == "5y" else YAHOO_CHART).format(sym=symbol)
     last_err = None
     for attempt in range(attempts):
         try:
@@ -364,6 +388,71 @@ def set_52w(obj, h52, l52):
     return new_obj
 
 
+STRIP_WINDOWS = (("w1", 7, 0), ("m1", 0, 1), ("m3", 0, 3),
+                 ("m6", 0, 6), ("y1", 0, 12))
+
+
+def add_months(d, months):
+    """Calendar-month addition with end-of-month clamping."""
+    m = d.month - 1 + months
+    y = d.year + m // 12
+    m = m % 12 + 1
+    return d.replace(year=y, month=m,
+                     day=min(d.day, calendar.monthrange(y, m)[1]))
+
+
+def strip_exit_date(entry_date, window):
+    """Calendar exit date for a strip window: entry + 7 days (w1) or
+    +1/+3/+6/+12 calendar months (m1/m3/m6/y1)."""
+    _name, days, months = window
+    d = entry_date + __import__("datetime").timedelta(days=days) if days else entry_date
+    return add_months(d, months) if months else d
+
+
+def parse_strip(obj):
+    """Current strip dict for a record, or None when the record has no
+    strip field. Values are floats or None."""
+    m = re.search(
+        r"strip:\{w1:(-?[\d.]+|null),m1:(-?[\d.]+|null),"
+        r"m3:(-?[\d.]+|null),m6:(-?[\d.]+|null),y1:(-?[\d.]+|null)\}",
+        obj)
+    if not m:
+        return None
+    out = {}
+    for name, val in zip(("w1", "m1", "m3", "m6", "y1"), m.groups()):
+        out[name] = None if val == "null" else float(val)
+    return out
+
+
+def _fmt_strip(strip):
+    parts = []
+    for name, _d, _m in STRIP_WINDOWS:
+        v = strip.get(name)
+        parts.append("%s:%s" % (name, "null" if v is None else "%.2f" % v))
+    return "strip:{" + ",".join(parts) + "}"
+
+
+def set_strip(obj, strip):
+    """Set a record's strip field. Replaces the existing strip:{...}
+    when present; when the record has no strip field, inserts it just
+    after the excess field (field order: ..., excess, strip, h52, ...)."""
+    head, tail = split_head(obj)
+    new_strip = _fmt_strip(strip)
+    new_head, n = re.subn(r"strip:\{[^}]*\}", new_strip, head, count=1)
+    if n != 1:
+        m = re.search(NUM_FIELD % "excess", head)
+        if not m:
+            raise RuntimeError("could not find excess to insert strip in %s"
+                               % obj[:120])
+        new_head = head[:m.end()] + "," + new_strip + head[m.end():]
+    new_obj = new_head + tail
+    check = parse_strip(new_obj)
+    if check != strip:
+        raise RuntimeError("strip did not update as expected in %s"
+                           % obj[:80])
+    return new_obj
+
+
 def replace_fields(obj, values):
     """Replace numeric fields in a record object (head only), formatting to
     2dp, then verify by re-parsing. `values` maps field name -> new value."""
@@ -427,6 +516,20 @@ def main():
     target_str = fmt_date(target)
     print("SPY as-of close %s: %.2f ; latest close %s: %.2f"
           % (as_of_str, as_of_spy, target_str, target_spy))
+    # --- SPY history for the strip: StockAnalysis 1y (source of record)
+    # merged with Yahoo 5y so exits before the 1y window are covered.
+    # StockAnalysis wins where both have a close (they matched exactly
+    # on every spot-check). If Yahoo fails, fall back to the 1y series
+    # alone; old-exit windows then stay null instead of failing the run.
+    try:
+        _spy5 = fetch_chart(SPY_SYMBOL, rng="5y")
+        spy_strip_series = dict(_spy5)
+        spy_strip_series.update(spy_series)
+    except RuntimeError as exc:
+        warnings_spy = ("SPY Yahoo 5y fetch failed (%s) — strip exits "
+                        "before the 1y window will stay null" % exc)
+        print("  warning: " + warnings_spy)
+        spy_strip_series = dict(spy_series)
     # No early exit when target == as_of: the prices may already be
     # current, but the 52-week high/low can still be stale (they were
     # frozen at 19 Nov 2026 while prices moved to 20 Nov), so the loop
@@ -445,6 +548,9 @@ def main():
     warnings = []
     repriced = 0
     refreshed_52w = 0
+    strip_filled = 0
+    strip_preserved = 0
+    strip_mismatch = 0
     skipped_no_price = 0
     skipped_held = 0
     skipped_foreign = 0
@@ -452,6 +558,14 @@ def main():
 
     sa_cache = {}
     yh_cache = {}
+    yh5_cache = {}
+
+    def get_yahoo_5y(symbol):
+        """Yahoo 5y closes for strip history (cached)."""
+        if symbol not in yh5_cache:
+            yh5_cache[symbol] = fetch_chart(symbol, rng="5y")
+            time.sleep(0.15)  # be polite to Yahoo between symbols
+        return yh5_cache[symbol]
 
     def get_sa_series(symbol):
         if symbol not in sa_cache:
@@ -662,6 +776,93 @@ def main():
         else:
             warnings.append("%s: no 52-week history in window ending %s — "
                             "leaving h52/l52 unchanged" % (ticker, tgt_d))
+
+        # --- maintain the return strip (Longs only) -------------------
+        # Recompute each elapsed window, but never overwrite a stored
+        # (non-null) value: once a window has elapsed its value is a
+        # historical fact. Only newly-elapsed windows (stored null,
+        # exit now reached) are filled in. Non-Long records keep no
+        # strip. A Yahoo failure for the strip history leaves the
+        # strip unchanged (warning only).
+        _head, _ = split_head(obj)
+        _lm = re.search(r'list:"([^"]+)"', _head)
+        if _lm and _lm.group(1) == "Long":
+            _em = re.search(r'entryDate:"([^"]+)"', _head)
+            if not _em:
+                warnings.append("%s: Long with no entryDate — strip skipped"
+                                % ticker)
+            else:
+                _entry_date = parse_file_date(_em.group(1))
+                # Ticker series for the strip: reuse the 1y series when
+                # it covers the entry date, else Yahoo 5y.
+                _strip_series = None
+                if ticker == "MSGS":
+                    _hl = hl_series
+                    if _hl and min(_hl) <= _entry_date:
+                        _strip_series = _hl
+                    else:
+                        try:
+                            _k5 = get_yahoo_5y("MSGK")
+                            _r5 = get_yahoo_5y("MSGR")
+                            _strip_series = {}
+                            for _d in sorted(_k5):
+                                _dd, _cc = close_on_or_before(_r5, _d)
+                                if _dd is not None:
+                                    _strip_series[_d] = r2(_k5[_d] + 0.5 * _cc)
+                        except RuntimeError as exc:
+                            warnings.append("%s: strip history unavailable "
+                                            "(%s) — strip unchanged" % (ticker, exc))
+                else:
+                    if series and min(series) <= _entry_date:
+                        _strip_series = series
+                    else:
+                        _sym = YAHOO_SYMBOL_MAP.get(ticker, ticker)
+                        try:
+                            _strip_series = get_yahoo_5y(_sym)
+                        except RuntimeError as exc:
+                            warnings.append("%s: strip history unavailable "
+                                            "(%s) — strip unchanged" % (ticker, exc))
+                if _strip_series is not None:
+                    _cur = parse_strip(obj) or {}
+                    _new = {}
+                    for _name, _days, _months in STRIP_WINDOWS:
+                        _exit = strip_exit_date(_entry_date, (_name, _days, _months))
+                        _stored = _cur.get(_name)
+                        if _exit > target:
+                            # Window not yet elapsed: keep the stored
+                            # value (normally null).
+                            _new[_name] = _stored
+                            continue
+                        # Exit reached: recompute (for validation), then
+                        # decide. A stored value is never overwritten.
+                        _td, _tc = close_on_or_before(_strip_series, _exit)
+                        _sd, _sc = close_on_or_before(spy_strip_series, _exit)
+                        if _tc is None or _sc is None:
+                            _new[_name] = _stored
+                            continue
+                        _uret = (_tc / f["entry"] - 1.0) * 100.0
+                        _uspy = (_sc / spy_entry - 1.0) * 100.0
+                        _val = r2(_uret - _uspy)
+                        if _stored is not None:
+                            _new[_name] = _stored
+                            strip_preserved += 1
+                            if _val != _stored:
+                                strip_mismatch += 1
+                                warnings.append(
+                                    "%s strip %s: recomputed %.2f "
+                                    "!= stored %.2f — keeping stored"
+                                    % (ticker, _name, _val, _stored))
+                        else:
+                            _new[_name] = _val
+                            strip_filled += 1
+                    try:
+                        _obj2 = set_strip(obj, _new)
+                        if _obj2 != obj:
+                            obj = _obj2
+                    except RuntimeError as exc:
+                        errors.append("%s: %s" % (ticker, exc))
+                        new_texts.append(obj)
+                        continue
         new_texts.append(obj)
         repriced += 1
 
@@ -723,8 +924,9 @@ def main():
     with open(index_path, "w", encoding="utf-8") as fh:
         fh.write(new_html)
 
-    print("re-priced %d records to %s (SPY %.2f); refreshed 52-week high/low on %d; skipped %d no-price, %d held, %d Yahoo-unavailable"
+    print("re-priced %d records to %s (SPY %.2f); refreshed 52-week high/low on %d; strip: %d window(s) newly filled, %d preserved, %d recompute mismatch(es) kept stored; skipped %d no-price, %d held, %d Yahoo-unavailable"
           % (repriced, target_str, target_spy, refreshed_52w,
+             strip_filled, strip_preserved, strip_mismatch,
              skipped_no_price, skipped_held, skipped_foreign))
     for w in warnings:
         print("  warning: " + w)
